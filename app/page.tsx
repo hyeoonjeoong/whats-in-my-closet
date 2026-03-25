@@ -1,7 +1,44 @@
+"use client";
+
+import { useState } from "react";
+import { Header, BottomNav } from "@/components/layout";
+
 export default function Home() {
+  const [activeTab, setActiveTab] = useState<"closet" | "outfits">("closet");
+
   return (
-    <main className="flex flex-1 flex-col">
-      <h1>내 옷장</h1>
-    </main>
+    <div className="flex min-h-full flex-col">
+      <Header />
+
+      <main className="flex-1 px-4 py-6">
+        <div className="mx-auto max-w-3xl">
+          {activeTab === "closet" ? (
+            <ClosetView />
+          ) : (
+            <OutfitsView />
+          )}
+        </div>
+      </main>
+
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+    </div>
+  );
+}
+
+function ClosetView() {
+  return (
+    <div className="text-center text-secondary-1">
+      <p>옷장이 비어있습니다</p>
+      <p className="mt-2 text-sm">옷을 추가해보세요</p>
+    </div>
+  );
+}
+
+function OutfitsView() {
+  return (
+    <div className="text-center text-secondary-1">
+      <p>저장된 코디가 없습니다</p>
+      <p className="mt-2 text-sm">코디를 만들어보세요</p>
+    </div>
   );
 }

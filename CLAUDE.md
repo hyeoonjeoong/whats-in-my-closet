@@ -66,6 +66,20 @@ hooks/
 - `refactor/대상` - 리팩토링
 - `chore/작업명` - 기타 작업
 
+## 디자인 시스템
+
+- **폰트**: Pretendard Variable
+- **아이콘**: lucide-react
+
+### 컬러 팔레트
+| 변수 | 색상 | 용도 |
+|------|------|------|
+| `--primary` | #30364F | 메인 컬러 |
+| `--secondary-1` | #ACBAC4 | 서브 컬러 1 |
+| `--secondary-2` | #E1D9BC | 서브 컬러 2 |
+| `--secondary-3` | #F0F0DB | 서브 컬러 3 |
+| `--background` | #F9F8F6 | 배경색 |
+
 ## 코딩 규칙
 
 - TypeScript strict mode 사용
