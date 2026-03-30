@@ -8,7 +8,7 @@ interface BottomNavProps {
   onTabChange: (tab: "closet" | "outfits") => void;
 }
 
-export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
+export const BottomNav = ({ activeTab, onTabChange }: BottomNavProps) => {
   return (
     <nav className="sticky bottom-0 z-10 border-t border-secondary-1/30 bg-background">
       <div className="mx-auto flex h-16 max-w-3xl">

@@ -11,12 +11,12 @@ interface FilterBarProps {
   onCategoryToggle: (category: Category) => void;
 }
 
-export function FilterBar({
+export const FilterBar = ({
   selectedSeasons,
   selectedCategories,
   onSeasonToggle,
   onCategoryToggle,
-}: FilterBarProps) {
+}: FilterBarProps) => {
   return (
     <div className="space-y-3">
       {/* 계절 필터 */}

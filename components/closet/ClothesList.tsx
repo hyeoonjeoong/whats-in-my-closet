@@ -8,7 +8,7 @@ interface ClothesListProps {
   filters: FilterState;
 }
 
-export function ClothesList({ items, filters }: ClothesListProps) {
+export const ClothesList = ({ items, filters }: ClothesListProps) => {
   // 필터 적용
   const filteredItems = items.filter((item) => {
     // 계절 필터

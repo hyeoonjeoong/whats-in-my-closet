@@ -9,7 +9,7 @@ interface ClothesCardProps {
   onClick?: () => void;
 }
 
-export function ClothesCard({ item, onClick }: ClothesCardProps) {
+export const ClothesCard = ({ item, onClick }: ClothesCardProps) => {
   const categoryLabel =
     CATEGORIES.find((c) => c.value === item.category)?.label ?? item.category;
 
