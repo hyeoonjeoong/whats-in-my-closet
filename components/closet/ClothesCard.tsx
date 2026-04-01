@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { ExternalLink } from "lucide-react";
 import type { ClothingItem } from "@/types";
 import { SEASONS, CATEGORIES } from "@/lib/constants";
@@ -23,12 +24,14 @@ export const ClothesCard = ({ item, onClick }: ClothesCardProps) => {
       onClick={onClick}
     >
       {/* 이미지 영역 */}
-      <div className="aspect-square overflow-hidden bg-secondary-3">
+      <div className="relative aspect-square overflow-hidden bg-secondary-3">
         {item.imageUrl ? (
-          <img
+          <Image
             src={item.imageUrl}
             alt={item.name}
-            className="h-full w-full object-cover transition-transform group-hover:scale-105"
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+            className="object-cover transition-transform group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-secondary-1">
