@@ -4,6 +4,7 @@ import { useRef, useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import { ImagePlus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { IconButton } from "./IconButton";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -102,14 +103,16 @@ export const ImageUpload = ({
               className="object-cover"
               unoptimized
             />
-            <button
+            <IconButton
               type="button"
               onClick={handleRemove}
-              className="absolute right-2 top-2 rounded-full bg-black/50 p-1 text-white hover:bg-black/70"
+              variant="dark"
+              size="sm"
+              className="absolute right-2 top-2"
               aria-label="이미지 삭제"
             >
               <X size={16} />
-            </button>
+            </IconButton>
           </>
         ) : (
           <div className="flex flex-col items-center gap-2 text-secondary-1">

@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui";
 import { SEASONS, CATEGORIES } from "@/lib/constants";
 import type { Season, Category } from "@/types";
 
@@ -22,38 +22,30 @@ export const FilterBar = ({
       {/* 계절 필터 */}
       <div className="flex flex-wrap gap-2">
         {SEASONS.map(({ value, label }) => (
-          <button
+          <Button
             key={value}
+            variant="chip"
+            selected={selectedSeasons.includes(value)}
             onClick={() => onSeasonToggle(value)}
-            className={cn(
-              "rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
-              selectedSeasons.includes(value)
-                ? "bg-primary text-white"
-                : "bg-secondary-3 text-primary"
-            )}
           >
             {label}
-          </button>
+          </Button>
         ))}
       </div>
 
       {/* 카테고리 필터 */}
       <div className="flex flex-wrap gap-2">
         {CATEGORIES.map(({ value, label }) => (
-          <button
+          <Button
             key={value}
+            variant="chip"
+            selected={selectedCategories.includes(value)}
             onClick={() => onCategoryToggle(value)}
-            className={cn(
-              "rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
-              selectedCategories.includes(value)
-                ? "bg-primary text-white"
-                : "bg-secondary-2 text-primary"
-            )}
           >
             {label}
-          </button>
+          </Button>
         ))}
       </div>
     </div>
   );
-}
+};

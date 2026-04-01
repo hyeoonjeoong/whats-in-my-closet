@@ -106,16 +106,39 @@ const PlusIcon = () => <svg>...</svg>
 ```
 
 ### 버튼
-- 클릭 가능한 버튼은 반드시 `@/components/ui`의 `Button` 컴포넌트 사용
-- `Button` 컴포넌트는 `cursor-pointer` 기본 포함
+- 클릭 가능한 버튼은 반드시 `@/components/ui`의 `Button` 또는 `IconButton` 컴포넌트 사용
+- 모든 버튼 컴포넌트는 `cursor-pointer` 기본 포함
+
+**Button** - 일반 버튼
+- variant: `primary` | `secondary` | `ghost` | `danger` | `chip`
+- size: `sm` | `md` | `lg`
+- `chip` variant는 토글/선택 버튼용 (rounded-full, `selected` prop 사용)
 
 ```tsx
-// ✅
 import { Button } from '@/components/ui'
+
+// 일반 버튼
 <Button variant="primary" onClick={handleClick}>클릭</Button>
 
-// ❌
-<button onClick={handleClick}>직접 button 태그 사용</button>
+// 토글/선택 버튼 (필터, 태그 등)
+<Button variant="chip" selected={isSelected} onClick={handleToggle}>봄</Button>
+```
+
+**IconButton** - 아이콘 전용 원형 버튼
+- variant: `primary` | `secondary` | `ghost` | `dark`
+- size: `sm` | `md` | `lg`
+
+```tsx
+import { IconButton } from '@/components/ui'
+import { Plus, X } from 'lucide-react'
+
+<IconButton variant="primary" onClick={handleAdd}><Plus size={20} /></IconButton>
+<IconButton variant="ghost" onClick={handleClose}><X size={20} /></IconButton>
+```
+
+```tsx
+// ❌ 직접 button 태그 사용 금지
+<button onClick={handleClick}>클릭</button>
 ```
 
 ---

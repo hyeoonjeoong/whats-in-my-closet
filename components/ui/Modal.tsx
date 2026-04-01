@@ -3,6 +3,7 @@
 import { useEffect, useCallback } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { IconButton } from "./IconButton";
 
 interface ModalProps {
   isOpen: boolean;
@@ -68,13 +69,14 @@ export const Modal = ({
             <h2 id="modal-title" className="text-lg font-semibold text-primary">
               {title}
             </h2>
-            <button
+            <IconButton
               onClick={onClose}
-              className="rounded-full p-1 text-secondary-1 hover:bg-secondary-3 hover:text-primary"
+              variant="ghost"
+              size="sm"
               aria-label="닫기"
             >
               <X size={20} />
-            </button>
+            </IconButton>
           </div>
         )}
 

@@ -15,10 +15,8 @@ export const BottomNav = ({ activeTab, onTabChange }: BottomNavProps) => {
         <button
           onClick={() => onTabChange("closet")}
           className={cn(
-            "flex flex-1 flex-col items-center justify-center gap-1 transition-colors",
-            activeTab === "closet"
-              ? "text-primary"
-              : "text-secondary-1"
+            "flex flex-1 cursor-pointer flex-col items-center justify-center gap-1 transition-colors",
+            activeTab === "closet" ? "text-primary" : "text-secondary-1"
           )}
         >
           <Shirt className="h-6 w-6" />
@@ -27,10 +25,8 @@ export const BottomNav = ({ activeTab, onTabChange }: BottomNavProps) => {
         <button
           onClick={() => onTabChange("outfits")}
           className={cn(
-            "flex flex-1 flex-col items-center justify-center gap-1 transition-colors",
-            activeTab === "outfits"
-              ? "text-primary"
-              : "text-secondary-1"
+            "flex flex-1 cursor-pointer flex-col items-center justify-center gap-1 transition-colors",
+            activeTab === "outfits" ? "text-primary" : "text-secondary-1"
           )}
         >
           <Palette className="h-6 w-6" />
@@ -39,4 +35,4 @@ export const BottomNav = ({ activeTab, onTabChange }: BottomNavProps) => {
       </div>
     </nav>
   );
-}
+};

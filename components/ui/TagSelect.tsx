@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { Button } from "./Button";
 
 interface TagOption<T extends string> {
   value: T;
@@ -39,24 +39,17 @@ export const TagSelect = <T extends string>({
       )}
 
       <div className="flex flex-wrap gap-2">
-        {options.map((option) => {
-          const isSelected = value.includes(option.value);
-          return (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => handleToggle(option.value)}
-              className={cn(
-                "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
-                isSelected
-                  ? "bg-primary text-white"
-                  : "bg-secondary-3 text-primary hover:bg-secondary-2"
-              )}
-            >
-              {option.label}
-            </button>
-          );
-        })}
+        {options.map((option) => (
+          <Button
+            key={option.value}
+            type="button"
+            variant="chip"
+            selected={value.includes(option.value)}
+            onClick={() => handleToggle(option.value)}
+          >
+            {option.label}
+          </Button>
+        ))}
       </div>
 
       {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
