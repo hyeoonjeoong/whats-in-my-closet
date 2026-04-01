@@ -105,6 +105,19 @@ import { Plus, Shirt, Filter } from 'lucide-react'
 const PlusIcon = () => <svg>...</svg>
 ```
 
+### 버튼
+- 클릭 가능한 버튼은 반드시 `@/components/ui`의 `Button` 컴포넌트 사용
+- `Button` 컴포넌트는 `cursor-pointer` 기본 포함
+
+```tsx
+// ✅
+import { Button } from '@/components/ui'
+<Button variant="primary" onClick={handleClick}>클릭</Button>
+
+// ❌
+<button onClick={handleClick}>직접 button 태그 사용</button>
+```
+
 ---
 
 ## 도메인 타입
