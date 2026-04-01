@@ -8,10 +8,10 @@
 ## 진행 상황
 
 - [x] Phase 1: 공통 UI 컴포넌트 (커밋: c27483e)
-- [ ] Phase 2: Supabase 연동
-- [ ] Phase 3: 커스텀 훅
-- [ ] Phase 4: AddClothesModal 컴포넌트
-- [ ] Phase 5: 기존 파일 수정 및 연동
+- [x] Phase 2: Supabase 연동 (커밋: 1106527)
+- [x] Phase 3: 커스텀 훅 (커밋: 78bd4ec)
+- [x] Phase 4: AddClothesModal 컴포넌트 (커밋: c3543e9)
+- [x] Phase 5: 기존 파일 수정 및 연동 (커밋: c9bde17)
 
 ---
 
