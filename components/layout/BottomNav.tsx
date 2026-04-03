@@ -10,7 +10,7 @@ interface BottomNavProps {
 
 export const BottomNav = ({ activeTab, onTabChange }: BottomNavProps) => {
   return (
-    <nav className="sticky bottom-0 z-10 border-t border-secondary-1/30 bg-background">
+    <nav className="fixed inset-x-0 bottom-0 z-fixed border-t border-secondary-1/30 bg-background">
       <div className="mx-auto flex h-16 max-w-3xl">
         <button
           onClick={() => onTabChange("closet")}
