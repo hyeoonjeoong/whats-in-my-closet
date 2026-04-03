@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { createClothes } from "@/lib/api/clothes";
+import { createClothesAction } from "@/lib/actions/clothes";
 import type { Category, Season, ClothingItem } from "@/types";
 
 interface FormData {
@@ -18,6 +18,7 @@ interface FormErrors {
   category?: string;
   seasons?: string;
   purchaseLink?: string;
+  password?: string;
 }
 
 interface UseAddClothesReturn {
@@ -30,8 +31,9 @@ interface UseAddClothesReturn {
   setSeasons: (seasons: Season[]) => void;
   setPurchaseLink: (link: string) => void;
   validate: () => boolean;
-  submit: () => Promise<ClothingItem>;
+  submit: (password: string) => Promise<ClothingItem>;
   reset: () => void;
+  clearPasswordError: () => void;
 }
 
 const initialFormData: FormData = {
@@ -103,7 +105,7 @@ export const useAddClothes = (): UseAddClothesReturn => {
     return Object.keys(newErrors).length === 0;
   }, [formData]);
 
-  const submit = useCallback(async (): Promise<ClothingItem> => {
+  const submit = useCallback(async (password: string): Promise<ClothingItem> => {
     if (!validate()) {
       throw new Error("입력값을 확인해주세요");
     }
@@ -113,17 +115,30 @@ export const useAddClothes = (): UseAddClothesReturn => {
     }
 
     setIsSubmitting(true);
+    setErrors((prev) => ({ ...prev, password: undefined }));
 
     try {
-      const result = await createClothes({
-        name: formData.name.trim(),
-        image: formData.image,
-        category: formData.category,
-        seasons: formData.seasons,
-        purchaseLink: formData.purchaseLink.trim() || undefined,
-      });
+      const submitFormData = new FormData();
+      submitFormData.append("image", formData.image);
+      submitFormData.append(
+        "data",
+        JSON.stringify({
+          name: formData.name.trim(),
+          category: formData.category,
+          seasons: formData.seasons,
+          purchaseLink: formData.purchaseLink.trim() || undefined,
+        })
+      );
+      submitFormData.append("password", password);
 
-      return result;
+      const result = await createClothesAction(submitFormData);
+
+      if (!result.success) {
+        setErrors((prev) => ({ ...prev, password: result.error }));
+        throw new Error(result.error);
+      }
+
+      return result.data!;
     } finally {
       setIsSubmitting(false);
     }
@@ -132,6 +147,10 @@ export const useAddClothes = (): UseAddClothesReturn => {
   const reset = useCallback(() => {
     setFormData(initialFormData);
     setErrors({});
+  }, []);
+
+  const clearPasswordError = useCallback(() => {
+    setErrors((prev) => ({ ...prev, password: undefined }));
   }, []);
 
   return {
@@ -146,5 +165,6 @@ export const useAddClothes = (): UseAddClothesReturn => {
     validate,
     submit,
     reset,
+    clearPasswordError,
   };
 };
