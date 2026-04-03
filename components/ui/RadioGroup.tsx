@@ -11,9 +11,10 @@ interface RadioGroupProps<T extends string> {
   label?: string;
   options: RadioOption<T>[];
   value: T | null;
-  onChange: (value: T) => void;
+  onChange?: (value: T) => void;
   error?: string;
   className?: string;
+  disabled?: boolean;
 }
 
 export const RadioGroup = <T extends string>({
@@ -23,6 +24,7 @@ export const RadioGroup = <T extends string>({
   onChange,
   error,
   className,
+  disabled = false,
 }: RadioGroupProps<T>) => {
   return (
     <div className={className}>
@@ -37,7 +39,8 @@ export const RadioGroup = <T extends string>({
             type="button"
             variant="chip"
             selected={value === option.value}
-            onClick={() => onChange(option.value)}
+            onClick={() => onChange?.(option.value)}
+            disabled={disabled}
           >
             {option.label}
           </Button>

@@ -6,9 +6,10 @@ import type { ClothingItem, FilterState } from "@/types";
 interface ClothesListProps {
   items: ClothingItem[];
   filters: FilterState;
+  onItemClick?: (itemId: string) => void;
 }
 
-export const ClothesList = ({ items, filters }: ClothesListProps) => {
+export const ClothesList = ({ items, filters, onItemClick }: ClothesListProps) => {
   // 필터 적용
   const filteredItems = items.filter((item) => {
     // 계절 필터
@@ -42,7 +43,7 @@ export const ClothesList = ({ items, filters }: ClothesListProps) => {
         <ClothesCard
           key={item.id}
           item={item}
-          onClick={() => console.log("클릭:", item.name)}
+          onClick={() => onItemClick?.(item.id)}
         />
       ))}
     </div>
