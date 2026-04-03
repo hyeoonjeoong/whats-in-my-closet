@@ -44,10 +44,10 @@ export const Modal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-modal flex items-center justify-center">
       {/* Overlay */}
       <div
-        className="absolute inset-0 bg-black/50"
+        className="absolute inset-0 z-modal-backdrop bg-black/50"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -55,7 +55,7 @@ export const Modal = ({
       {/* Modal Content */}
       <div
         className={cn(
-          "relative z-10 w-full max-w-lg max-h-[90vh] overflow-y-auto",
+          "relative z-modal w-full max-w-lg max-h-[90vh] overflow-y-auto",
           "mx-4 rounded-xl bg-background shadow-xl",
           className
         )}
@@ -65,7 +65,7 @@ export const Modal = ({
       >
         {/* Header */}
         {title && (
-          <div className="sticky top-0 flex items-center justify-between border-b border-secondary-1/30 bg-background px-4 py-3">
+          <div className="sticky top-0 z-10 flex items-center justify-between border-b border-secondary-1/30 bg-background px-4 py-3">
             <h2 id="modal-title" className="text-lg font-semibold text-primary">
               {title}
             </h2>

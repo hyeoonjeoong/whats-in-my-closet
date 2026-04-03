@@ -8,6 +8,16 @@
   --secondary-1: #ACBAC4;
   --secondary-2: #E1D9BC;
   --secondary-3: #F0F0DB;
+  --danger: #C44A3A;
+
+  /* z-index 체계 */
+  --z-dropdown: 10;
+  --z-sticky: 20;
+  --z-fixed: 30;
+  --z-modal-backdrop: 40;
+  --z-modal: 50;
+  --z-toast: 60;
+  --z-tooltip: 70;
 }
 
 @theme inline {
@@ -17,7 +27,17 @@
   --color-secondary-1: var(--secondary-1);
   --color-secondary-2: var(--secondary-2);
   --color-secondary-3: var(--secondary-3);
+  --color-danger: var(--danger);
   --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+
+  /* z-index */
+  --z-index-dropdown: var(--z-dropdown);
+  --z-index-sticky: var(--z-sticky);
+  --z-index-fixed: var(--z-fixed);
+  --z-index-modal-backdrop: var(--z-modal-backdrop);
+  --z-index-modal: var(--z-modal);
+  --z-index-toast: var(--z-toast);
+  --z-index-tooltip: var(--z-tooltip);
 }
 
 body {

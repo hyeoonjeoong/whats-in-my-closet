@@ -18,7 +18,7 @@ const variantStyles: Record<ButtonVariant, string> = {
   primary: "bg-primary text-white hover:bg-primary/90",
   secondary: "bg-secondary-3 text-primary hover:bg-secondary-2",
   ghost: "bg-transparent text-primary hover:bg-secondary-3",
-  danger: "bg-red-500 text-white hover:bg-red-600",
+  danger: "bg-danger text-white hover:bg-danger/90",
   chip: "", // selected prop에 따라 동적으로 적용
 };
 

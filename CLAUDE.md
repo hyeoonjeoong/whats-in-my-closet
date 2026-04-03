@@ -79,6 +79,7 @@ hooks/
 | `--secondary-2` | #E1D9BC | 서브 컬러 2 |
 | `--secondary-3` | #F0F0DB | 서브 컬러 3 |
 | `--background` | #F9F8F6 | 배경색 |
+| `--danger` | #C44A3A | 삭제/경고 |
 
 ## 코딩 규칙
 

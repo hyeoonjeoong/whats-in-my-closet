@@ -11,9 +11,10 @@ interface TagSelectProps<T extends string> {
   label?: string;
   options: TagOption<T>[];
   value: T[];
-  onChange: (value: T[]) => void;
+  onChange?: (value: T[]) => void;
   error?: string;
   className?: string;
+  disabled?: boolean;
 }
 
 export const TagSelect = <T extends string>({
@@ -23,12 +24,13 @@ export const TagSelect = <T extends string>({
   onChange,
   error,
   className,
+  disabled = false,
 }: TagSelectProps<T>) => {
   const handleToggle = (optionValue: T) => {
     if (value.includes(optionValue)) {
-      onChange(value.filter((v) => v !== optionValue));
+      onChange?.(value.filter((v) => v !== optionValue));
     } else {
-      onChange([...value, optionValue]);
+      onChange?.([...value, optionValue]);
     }
   };
 
@@ -46,6 +48,7 @@ export const TagSelect = <T extends string>({
             variant="chip"
             selected={value.includes(option.value)}
             onClick={() => handleToggle(option.value)}
+            disabled={disabled}
           >
             {option.label}
           </Button>

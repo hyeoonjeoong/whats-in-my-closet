@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { Header, BottomNav } from "@/components/layout";
-import { FilterBar, ClothesList, AddClothesModal } from "@/components/closet";
+import {
+  FilterBar,
+  ClothesList,
+  AddClothesModal,
+  ClothesDetailModal,
+} from "@/components/closet";
 import { useFilter } from "@/hooks/useFilter";
 import { useClothes } from "@/hooks/useClothes";
 import type { ClothingItem } from "@/types";
@@ -10,6 +15,7 @@ import type { ClothingItem } from "@/types";
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"closet" | "outfits">("closet");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const { clothes, isLoading, error, refetch } = useClothes();
 
   const handleAddSuccess = (newItem: ClothingItem) => {
@@ -17,14 +23,33 @@ export default function Home() {
     refetch();
   };
 
+  const handleItemClick = (itemId: string) => {
+    setSelectedItemId(itemId);
+  };
+
+  const handleUpdate = (updatedItem: ClothingItem) => {
+    console.log("옷 수정됨:", updatedItem.name);
+    refetch();
+  };
+
+  const handleDelete = (itemId: string) => {
+    console.log("옷 삭제됨:", itemId);
+    refetch();
+  };
+
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="flex min-h-full flex-col pb-16">
       <Header onAddClick={() => setIsAddModalOpen(true)} />
 
       <main className="flex-1 px-4 py-6">
         <div className="mx-auto max-w-3xl">
           {activeTab === "closet" ? (
-            <ClosetView clothes={clothes} isLoading={isLoading} error={error} />
+            <ClosetView
+              clothes={clothes}
+              isLoading={isLoading}
+              error={error}
+              onItemClick={handleItemClick}
+            />
           ) : (
             <OutfitsView />
           )}
@@ -38,6 +63,14 @@ export default function Home() {
         onClose={() => setIsAddModalOpen(false)}
         onSuccess={handleAddSuccess}
       />
+
+      <ClothesDetailModal
+        isOpen={selectedItemId !== null}
+        onClose={() => setSelectedItemId(null)}
+        itemId={selectedItemId}
+        onUpdate={handleUpdate}
+        onDelete={handleDelete}
+      />
     </div>
   );
 }
@@ -46,10 +79,11 @@ interface ClosetViewProps {
   clothes: ClothingItem[];
   isLoading: boolean;
   error: string | null;
+  onItemClick: (itemId: string) => void;
 }
 
-const ClosetView = ({ clothes, isLoading, error }: ClosetViewProps) => {
-  const { filters, toggleSeason, toggleCategory } = useFilter();
+const ClosetView = ({ clothes, isLoading, error, onItemClick }: ClosetViewProps) => {
+  const { filters, toggleSeason, toggleCategory, resetFilters } = useFilter();
 
   if (isLoading) {
     return (
@@ -74,10 +108,11 @@ const ClosetView = ({ clothes, isLoading, error }: ClosetViewProps) => {
         selectedCategories={filters.categories}
         onSeasonToggle={toggleSeason}
         onCategoryToggle={toggleCategory}
+        onReset={resetFilters}
       />
 
       {clothes.length > 0 ? (
-        <ClothesList items={clothes} filters={filters} />
+        <ClothesList items={clothes} filters={filters} onItemClick={onItemClick} />
       ) : (
         <div className="text-center text-secondary-1 py-12">
           <p>옷장이 비어있습니다</p>
