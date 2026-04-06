@@ -11,6 +11,8 @@ import {
 import { useFilter } from "@/hooks/useFilter";
 import { useClothes } from "@/hooks/useClothes";
 import type { ClothingItem } from "@/types";
+import {IconButton} from "@/components/ui";
+import {Plus} from "lucide-react";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"closet" | "outfits">("closet");
@@ -39,7 +41,7 @@ export default function Home() {
 
   return (
     <div className="flex min-h-full flex-col pb-16">
-      <Header onAddClick={() => setIsAddModalOpen(true)} />
+      <Header />
 
       <main className="flex-1 px-4 py-6">
         <div className="mx-auto max-w-3xl">
@@ -49,6 +51,7 @@ export default function Home() {
               isLoading={isLoading}
               error={error}
               onItemClick={handleItemClick}
+              onAddClick={() => setIsAddModalOpen(true)}
             />
           ) : (
             <OutfitsView />
@@ -80,9 +83,11 @@ interface ClosetViewProps {
   isLoading: boolean;
   error: string | null;
   onItemClick: (itemId: string) => void;
+  onAddClick?: () => void;
+
 }
 
-const ClosetView = ({ clothes, isLoading, error, onItemClick }: ClosetViewProps) => {
+const ClosetView = ({ clothes, isLoading, error, onItemClick, onAddClick }: ClosetViewProps) => {
   const { filters, toggleSeason, toggleCategory, resetFilters } = useFilter();
 
   if (isLoading) {
@@ -103,6 +108,16 @@ const ClosetView = ({ clothes, isLoading, error, onItemClick }: ClosetViewProps)
 
   return (
     <div className="space-y-6">
+        <div className="flex items-center justify-end mb-4">
+        <IconButton
+            onClick={onAddClick}
+            variant="primary"
+            size="md"
+            aria-label="옷 추가"
+        >
+            <Plus size={20} />
+        </IconButton>
+        </div>
       <FilterBar
         selectedSeasons={filters.seasons}
         selectedCategories={filters.categories}
