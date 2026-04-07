@@ -31,10 +31,19 @@ npm run lint     # ESLint 실행
 ## 아키텍처
 
 ```
-app/                    # Next.js App Router
-├── page.tsx           # 메인 홈 (옷장 + 코디 탭)
-├── layout.tsx         # 루트 레이아웃
-└── globals.css        # 글로벌 스타일
+app/                        # Next.js App Router
+├── layout.tsx              # 루트 레이아웃
+├── globals.css             # 글로벌 스타일
+├── page.tsx                # / → /closet 리다이렉트
+├── (tabs)/                 # Route Group (탭 공통 레이아웃)
+│   ├── layout.tsx          # Header + BottomNav 공통
+│   ├── closet/
+│   │   └── page.tsx        # /closet - 옷장 탭
+│   └── outfits/
+│       └── page.tsx        # /outfits - 코디 탭
+└── outfit/
+    └── new/
+        └── page.tsx        # /outfit/new - 코디 만들기 (풀스크린)
 
 components/
 ├── ui/                # 공통 UI 컴포넌트 (Button, Modal, Card 등)
@@ -53,6 +62,13 @@ types/
 hooks/
 └── useFilter.ts       # 필터링 커스텀 훅
 ```
+
+### 라우팅 구조 (Route Group 패턴)
+
+- **`(tabs)/`**: 탭 네비게이션이 있는 페이지들 (Header + BottomNav 공유)
+- **`app/` 루트**: 풀스크린 페이지 (탭 없음, 예: `/outfit/new`)
+
+> 상세 규칙은 `.claude/rules/frontend.md` 참고
 
 ## Git 워크플로우
 

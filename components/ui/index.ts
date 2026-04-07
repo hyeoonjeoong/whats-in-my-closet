@@ -6,3 +6,4 @@ export { ImageUpload } from "./ImageUpload";
 export { TagSelect } from "./TagSelect";
 export { RadioGroup } from "./RadioGroup";
 export { PasswordModal } from "./PasswordModal";
+export { Fab } from "./Fab";
