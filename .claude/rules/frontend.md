@@ -32,3 +32,35 @@
 **규칙:**
 - 임의의 z-index 값 사용 금지 (`z-10`, `z-50` 등 직접 사용 X)
 - 모달 내부 요소는 상대적 z-index 사용 (`z-10` 등 낮은 값)
+
+## 라우팅 규칙 (Route Group 패턴)
+
+Next.js App Router의 Route Group을 활용한 라우팅 구조를 따릅니다.
+
+### 탭 페이지 추가 시
+`app/(tabs)/` 내에 폴더 생성:
+```
+app/(tabs)/새탭명/page.tsx
+```
+- `(tabs)/layout.tsx`의 Header + BottomNav 레이아웃 자동 적용
+- `components/layout/BottomNav.tsx`에 탭 추가 필요
+
+### 풀스크린 페이지 추가 시
+`app/` 루트에 폴더 생성:
+```
+app/새기능/page.tsx
+```
+- 탭 레이아웃 없이 독립적인 페이지
+- 예: `/outfit/new`, `/settings` 등
+
+### 금지 사항
+- **조건부 렌더링으로 탭/페이지 분기 금지**
+  ```tsx
+  // ❌ 금지
+  {activeTab === "closet" ? <ClosetView /> : <OutfitsView />}
+
+  // ✅ 반드시 라우팅 분리
+  app/(tabs)/closet/page.tsx
+  app/(tabs)/outfits/page.tsx
+  ```
+- URL 기반 네비게이션 필수 (북마크/공유/뒤로가기 지원)
