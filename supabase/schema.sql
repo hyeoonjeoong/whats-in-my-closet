@@ -6,7 +6,7 @@
 CREATE TABLE clothes (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
-  image_url TEXT NOT NULL,
+  image_urls TEXT[] NOT NULL DEFAULT '{}',
   category TEXT NOT NULL CHECK (category IN ('top', 'bottom', 'outer', 'accessory', 'shoes', 'bag')),
   seasons TEXT[] NOT NULL DEFAULT '{}',
   purchase_link TEXT,

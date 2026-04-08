@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
-import { ExternalLink, ImagePlus, X } from "lucide-react";
+import { ExternalLink, ImagePlus, X, Star } from "lucide-react";
 import { useClothesDetail } from "@/hooks/useClothesDetail";
 import { SEASONS, CATEGORIES } from "@/lib/constants";
 import {
@@ -46,7 +46,8 @@ export const ClothesDetailModal = ({
     loadItem,
     startEditing,
     cancelEditing,
-    setNewImage,
+    setImageUrls,
+    setNewImages,
     setName,
     setCategory,
     setSeasons,
@@ -142,7 +143,8 @@ export const ClothesDetailModal = ({
             errors={errors}
             onSubmit={handleSubmitClick}
             onCancel={handleCancelEdit}
-            setNewImage={setNewImage}
+            setImageUrls={setImageUrls}
+            setNewImages={setNewImages}
             setName={setName}
             setCategory={setCategory}
             setSeasons={setSeasons}
@@ -194,23 +196,66 @@ const ViewMode = ({
   onDeleteConfirm,
   onDeleteCancel,
 }: ViewModeProps) => {
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const hasImages = item.imageUrls.length > 0;
+  const hasMultipleImages = item.imageUrls.length > 1;
+
   return (
     <div className="space-y-5">
-      {/* 이미지 */}
+      {/* 대표 이미지 */}
       <div className="relative aspect-square overflow-hidden rounded-xl bg-secondary-3">
-        {item.imageUrl ? (
-          <Image
-            src={item.imageUrl}
-            alt={item.name}
-            fill
-            className="object-cover"
-          />
+        {hasImages ? (
+          <>
+            <Image
+              src={item.imageUrls[selectedImageIndex]}
+              alt={item.name}
+              fill
+              className="object-cover"
+            />
+            {selectedImageIndex === 0 && (
+              <div className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-primary/90 px-2 py-1 text-xs text-white">
+                <Star size={12} fill="currentColor" />
+                <span>대표</span>
+              </div>
+            )}
+          </>
         ) : (
           <div className="flex h-full w-full items-center justify-center text-secondary-1">
             <span className="text-6xl">👕</span>
           </div>
         )}
       </div>
+
+      {/* 서브 이미지 썸네일 */}
+      {hasMultipleImages && (
+        <div className="grid grid-cols-4 gap-2">
+          {item.imageUrls.map((url, index) => (
+            <button
+              key={url}
+              type="button"
+              onClick={() => setSelectedImageIndex(index)}
+              className={cn(
+                "relative aspect-square overflow-hidden rounded-lg cursor-pointer transition-all",
+                selectedImageIndex === index
+                  ? "ring-2 ring-primary ring-offset-1"
+                  : "opacity-70 hover:opacity-100"
+              )}
+            >
+              <Image
+                src={url}
+                alt={`${item.name} ${index + 1}`}
+                fill
+                className="object-cover"
+              />
+              {index === 0 && (
+                <div className="absolute left-1 top-1 rounded-full bg-primary/90 p-0.5">
+                  <Star size={10} fill="white" className="text-white" />
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* 정보 - 등록/수정과 동일한 UI */}
       <Input label="이름" value={item.name} disabled readOnly />
@@ -296,8 +341,8 @@ const ViewMode = ({
 
 interface EditModeProps {
   formData: {
-    imageUrl: string;
-    newImage: File | null;
+    imageUrls: string[];
+    newImages: File[];
     name: string;
     category: Category | null;
     seasons: Season[];
@@ -311,7 +356,8 @@ interface EditModeProps {
   };
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
-  setNewImage: (file: File | null) => void;
+  setImageUrls: (urls: string[]) => void;
+  setNewImages: (files: File[]) => void;
   setName: (name: string) => void;
   setCategory: (category: Category) => void;
   setSeasons: (seasons: Season[]) => void;
@@ -319,6 +365,7 @@ interface EditModeProps {
 }
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_IMAGES = 5;
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 const EditMode = ({
@@ -326,101 +373,234 @@ const EditMode = ({
   errors,
   onSubmit,
   onCancel,
-  setNewImage,
+  setImageUrls,
+  setNewImages,
   setName,
   setCategory,
   setSeasons,
   setPurchaseLink,
 }: EditModeProps) => {
+  const inputRef = useRef<HTMLInputElement>(null);
   const [localError, setLocalError] = useState<string | null>(null);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const totalImageCount = formData.imageUrls.length + formData.newImages.length;
+  const canAddMore = totalImageCount < MAX_IMAGES;
+  const hasMainImage = totalImageCount > 0;
+
+  // 새 이미지 미리보기 URL 생성
+  const newImagePreviews = formData.newImages.map((file) =>
+    URL.createObjectURL(file)
+  );
+
+  const handleAddImages = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
     setLocalError(null);
 
-    if (!file) {
-      setNewImage(null);
+    if (files.length === 0) return;
+
+    const newTotalCount = totalImageCount + files.length;
+    if (newTotalCount > MAX_IMAGES) {
+      setLocalError(`이미지는 최대 ${MAX_IMAGES}장까지 업로드 가능합니다`);
       return;
     }
 
-    if (!ACCEPTED_TYPES.includes(file.type)) {
+    const invalidTypeFile = files.find(
+      (file) => !ACCEPTED_TYPES.includes(file.type)
+    );
+    if (invalidTypeFile) {
       setLocalError("JPG, PNG, WEBP 파일만 업로드 가능합니다");
       return;
     }
 
-    if (file.size > MAX_FILE_SIZE) {
+    const oversizedFile = files.find((file) => file.size > MAX_FILE_SIZE);
+    if (oversizedFile) {
       setLocalError("파일 크기는 5MB 이하여야 합니다");
       return;
     }
 
-    setNewImage(file);
+    setNewImages([...formData.newImages, ...files]);
+
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
   };
 
-  const previewUrl = formData.newImage
-    ? URL.createObjectURL(formData.newImage)
-    : formData.imageUrl;
+  const handleRemoveExistingImage = (index: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newUrls = formData.imageUrls.filter((_, i) => i !== index);
+    setImageUrls(newUrls);
+  };
+
+  const handleRemoveNewImage = (index: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newFiles = formData.newImages.filter((_, i) => i !== index);
+    setNewImages(newFiles);
+  };
+
+  const handleClick = () => {
+    inputRef.current?.click();
+  };
+
+  // 첫 번째 이미지 (대표 이미지) 결정
+  const mainImageSrc =
+    formData.imageUrls.length > 0
+      ? formData.imageUrls[0]
+      : newImagePreviews.length > 0
+        ? newImagePreviews[0]
+        : null;
+
+  const isMainImageNew = formData.imageUrls.length === 0 && newImagePreviews.length > 0;
 
   return (
     <form onSubmit={onSubmit} className="space-y-5">
-      {/* 이미지 업로드 (기존 이미지 유지 가능) */}
-      <div>
-        <input
-          type="file"
-          id="image-edit-input"
-          accept={ACCEPTED_TYPES.join(",")}
-          onChange={handleImageChange}
-          className="hidden"
-        />
+      <input
+        ref={inputRef}
+        type="file"
+        accept={ACCEPTED_TYPES.join(",")}
+        onChange={handleAddImages}
+        multiple
+        className="hidden"
+      />
 
-        <div
-          onClick={() => document.getElementById("image-edit-input")?.click()}
-          className={cn(
-            "relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition-colors",
-            previewUrl
-              ? "border-transparent"
-              : "border-secondary-1/50 hover:border-primary",
-            localError && "border-red-500"
-          )}
-        >
-          {previewUrl ? (
-            <>
+      {/* 대표 이미지 */}
+      <div
+        onClick={handleClick}
+        className={cn(
+          "relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition-colors",
+          hasMainImage
+            ? "border-transparent"
+            : "border-secondary-1/50 hover:border-primary",
+          localError && "border-red-500"
+        )}
+      >
+        {mainImageSrc ? (
+          <>
+            <Image
+              src={mainImageSrc}
+              alt="대표 이미지"
+              fill
+              className="object-cover"
+              unoptimized={isMainImageNew}
+            />
+            <div className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-primary/90 px-2 py-1 text-xs text-white">
+              <Star size={12} fill="currentColor" />
+              <span>대표</span>
+            </div>
+            {formData.imageUrls.length > 0 ? (
+              <IconButton
+                type="button"
+                onClick={(e) => handleRemoveExistingImage(0, e)}
+                variant="dark"
+                size="sm"
+                className="absolute right-2 top-2"
+                aria-label="대표 이미지 삭제"
+              >
+                <X size={16} />
+              </IconButton>
+            ) : (
+              <IconButton
+                type="button"
+                onClick={(e) => handleRemoveNewImage(0, e)}
+                variant="dark"
+                size="sm"
+                className="absolute right-2 top-2"
+                aria-label="대표 이미지 삭제"
+              >
+                <X size={16} />
+              </IconButton>
+            )}
+          </>
+        ) : (
+          <div className="flex flex-col items-center gap-2 text-secondary-1">
+            <ImagePlus size={32} />
+            <span className="text-sm">이미지 선택</span>
+          </div>
+        )}
+      </div>
+
+      {/* 안내 문구 */}
+      <p className="text-center text-xs text-secondary-1">
+        JPG, PNG, WEBP (최대 5MB) · 최대 {MAX_IMAGES}장
+        {hasMainImage && (
+          <span className="block mt-0.5">
+            첫 번째 이미지가 대표 이미지로 설정됩니다
+          </span>
+        )}
+      </p>
+
+      {/* 서브 이미지 그리드 */}
+      {hasMainImage && (
+        <div className="grid grid-cols-4 gap-2">
+          {/* 기존 이미지들 (첫 번째 제외) */}
+          {formData.imageUrls.slice(1).map((url, index) => (
+            <div
+              key={url}
+              className="relative aspect-square overflow-hidden rounded-lg"
+            >
               <Image
-                src={previewUrl}
-                alt="미리보기"
+                src={url}
+                alt={`이미지 ${index + 2}`}
                 fill
                 className="object-cover"
-                unoptimized={!!formData.newImage}
               />
-              {formData.newImage && (
-                <IconButton
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setNewImage(null);
-                  }}
-                  variant="dark"
-                  size="sm"
-                  className="absolute right-2 top-2"
-                  aria-label="새 이미지 취소"
+              <IconButton
+                type="button"
+                onClick={(e) => handleRemoveExistingImage(index + 1, e)}
+                variant="dark"
+                size="sm"
+                className="absolute right-1 top-1"
+                aria-label={`이미지 ${index + 2} 삭제`}
+              >
+                <X size={12} />
+              </IconButton>
+            </div>
+          ))}
+
+          {/* 새 이미지들 (기존 이미지가 없으면 첫 번째 제외) */}
+          {formData.newImages
+            .slice(formData.imageUrls.length === 0 ? 1 : 0)
+            .map((_, index) => {
+              const actualIndex =
+                formData.imageUrls.length === 0 ? index + 1 : index;
+              return (
+                <div
+                  key={newImagePreviews[actualIndex]}
+                  className="relative aspect-square overflow-hidden rounded-lg"
                 >
-                  <X size={16} />
-                </IconButton>
-              )}
-              <div className="absolute bottom-2 left-2 rounded-full bg-black/50 px-2 py-1 text-xs text-white">
-                {formData.newImage ? "새 이미지" : "클릭하여 변경"}
-              </div>
-            </>
-          ) : (
-            <div className="flex flex-col items-center gap-2 text-secondary-1">
-              <ImagePlus size={32} />
-              <span className="text-sm">이미지 선택</span>
-              <span className="text-xs">JPG, PNG, WEBP (최대 5MB)</span>
+                  <Image
+                    src={newImagePreviews[actualIndex]}
+                    alt={`새 이미지 ${actualIndex + 1}`}
+                    fill
+                    className="object-cover"
+                    unoptimized
+                  />
+                  <IconButton
+                    type="button"
+                    onClick={(e) => handleRemoveNewImage(actualIndex, e)}
+                    variant="dark"
+                    size="sm"
+                    className="absolute right-1 top-1"
+                    aria-label={`새 이미지 ${actualIndex + 1} 삭제`}
+                  >
+                    <X size={12} />
+                  </IconButton>
+                </div>
+              );
+            })}
+
+          {/* 추가 버튼 */}
+          {canAddMore && (
+            <div
+              onClick={handleClick}
+              className="flex aspect-square cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-secondary-1/50 transition-colors hover:border-primary"
+            >
+              <ImagePlus size={20} className="text-secondary-1" />
             </div>
           )}
         </div>
+      )}
 
-        {localError && <p className="mt-1 text-sm text-red-500">{localError}</p>}
-      </div>
+      {localError && <p className="mt-2 text-sm text-red-500">{localError}</p>}
 
       <Input
         label="이름"

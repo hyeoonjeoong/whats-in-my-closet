@@ -23,11 +23,11 @@ export const ClothesCard = ({ item, onClick }: ClothesCardProps) => {
       className="group relative overflow-hidden rounded-xl bg-white shadow-sm transition-shadow hover:shadow-md cursor-pointer"
       onClick={onClick}
     >
-      {/* 이미지 영역 */}
+      {/* 이미지 영역 - 대표 이미지 (첫 번째) 표시 */}
       <div className="relative aspect-square overflow-hidden bg-secondary-3">
-        {item.imageUrl ? (
+        {item.imageUrls.length > 0 ? (
           <Image
-            src={item.imageUrl}
+            src={item.imageUrls[0]}
             alt={item.name}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
@@ -36,6 +36,12 @@ export const ClothesCard = ({ item, onClick }: ClothesCardProps) => {
         ) : (
           <div className="flex h-full w-full items-center justify-center text-secondary-1">
             <span className="text-4xl">👕</span>
+          </div>
+        )}
+        {/* 다중 이미지 인디케이터 */}
+        {item.imageUrls.length > 1 && (
+          <div className="absolute bottom-2 right-2 rounded-full bg-black/60 px-2 py-0.5 text-xs text-white">
+            +{item.imageUrls.length - 1}
           </div>
         )}
       </div>

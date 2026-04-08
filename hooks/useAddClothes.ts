@@ -5,7 +5,7 @@ import { createClothesAction } from "@/lib/actions/clothes";
 import type { Category, Season, ClothingItem } from "@/types";
 
 interface FormData {
-  image: File | null;
+  images: File[];
   name: string;
   category: Category | null;
   seasons: Season[];
@@ -13,7 +13,7 @@ interface FormData {
 }
 
 interface FormErrors {
-  image?: string;
+  images?: string;
   name?: string;
   category?: string;
   seasons?: string;
@@ -25,7 +25,7 @@ interface UseAddClothesReturn {
   formData: FormData;
   errors: FormErrors;
   isSubmitting: boolean;
-  setImage: (file: File | null) => void;
+  setImages: (files: File[]) => void;
   setName: (name: string) => void;
   setCategory: (category: Category) => void;
   setSeasons: (seasons: Season[]) => void;
@@ -37,7 +37,7 @@ interface UseAddClothesReturn {
 }
 
 const initialFormData: FormData = {
-  image: null,
+  images: [],
   name: "",
   category: null,
   seasons: [],
@@ -51,9 +51,9 @@ export const useAddClothes = (): UseAddClothesReturn => {
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const setImage = useCallback((file: File | null) => {
-    setFormData((prev) => ({ ...prev, image: file }));
-    setErrors((prev) => ({ ...prev, image: undefined }));
+  const setImages = useCallback((files: File[]) => {
+    setFormData((prev) => ({ ...prev, images: files }));
+    setErrors((prev) => ({ ...prev, images: undefined }));
   }, []);
 
   const setName = useCallback((name: string) => {
@@ -79,8 +79,8 @@ export const useAddClothes = (): UseAddClothesReturn => {
   const validate = useCallback((): boolean => {
     const newErrors: FormErrors = {};
 
-    if (!formData.image) {
-      newErrors.image = "이미지를 선택해주세요";
+    if (formData.images.length === 0) {
+      newErrors.images = "이미지를 최소 1장 선택해주세요";
     }
 
     if (!formData.name.trim()) {
@@ -110,7 +110,7 @@ export const useAddClothes = (): UseAddClothesReturn => {
       throw new Error("입력값을 확인해주세요");
     }
 
-    if (!formData.image || !formData.category) {
+    if (formData.images.length === 0 || !formData.category) {
       throw new Error("필수 항목을 입력해주세요");
     }
 
@@ -119,7 +119,9 @@ export const useAddClothes = (): UseAddClothesReturn => {
 
     try {
       const submitFormData = new FormData();
-      submitFormData.append("image", formData.image);
+      formData.images.forEach((image) => {
+        submitFormData.append("images", image);
+      });
       submitFormData.append(
         "data",
         JSON.stringify({
@@ -157,7 +159,7 @@ export const useAddClothes = (): UseAddClothesReturn => {
     formData,
     errors,
     isSubmitting,
-    setImage,
+    setImages,
     setName,
     setCategory,
     setSeasons,

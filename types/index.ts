@@ -11,7 +11,7 @@ export type Category = "top" | "bottom" | "outer" | "accessory" | "shoes" | "bag
 export interface DbClothes {
   id: string;
   name: string;
-  image_url: string;
+  image_urls: string[];
   category: Category;
   seasons: Season[];
   purchase_link: string | null;
@@ -41,7 +41,7 @@ export interface DbOutfitItem {
 export interface ClothingItem {
   id: string;
   name: string;
-  imageUrl: string;
+  imageUrls: string[];
   category: Category;
   seasons: Season[];
   purchaseLink?: string;
@@ -72,7 +72,7 @@ export function toClothingItem(db: DbClothes): ClothingItem {
   return {
     id: db.id,
     name: db.name,
-    imageUrl: db.image_url,
+    imageUrls: db.image_urls,
     category: db.category,
     seasons: db.seasons,
     purchaseLink: db.purchase_link ?? undefined,

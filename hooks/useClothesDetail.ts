@@ -9,8 +9,8 @@ import {
 import type { Category, Season, ClothingItem } from "@/types";
 
 interface FormData {
-  imageUrl: string;
-  newImage: File | null;
+  imageUrls: string[];
+  newImages: File[];
   name: string;
   category: Category | null;
   seasons: Season[];
@@ -36,7 +36,8 @@ interface UseClothesDetailReturn {
   loadItem: (id: string) => Promise<void>;
   startEditing: () => void;
   cancelEditing: () => void;
-  setNewImage: (file: File | null) => void;
+  setImageUrls: (urls: string[]) => void;
+  setNewImages: (files: File[]) => void;
   setName: (name: string) => void;
   setCategory: (category: Category) => void;
   setSeasons: (seasons: Season[]) => void;
@@ -48,8 +49,8 @@ interface UseClothesDetailReturn {
 }
 
 const initialFormData: FormData = {
-  imageUrl: "",
-  newImage: null,
+  imageUrls: [],
+  newImages: [],
   name: "",
   category: null,
   seasons: [],
@@ -77,8 +78,8 @@ export const useClothesDetail = (): UseClothesDetailReturn => {
       const loadedItem = await getClothesById(id);
       setItem(loadedItem);
       setFormData({
-        imageUrl: loadedItem.imageUrl,
-        newImage: null,
+        imageUrls: loadedItem.imageUrls,
+        newImages: [],
         name: loadedItem.name,
         category: loadedItem.category,
         seasons: loadedItem.seasons,
@@ -96,8 +97,8 @@ export const useClothesDetail = (): UseClothesDetailReturn => {
   const cancelEditing = useCallback(() => {
     if (item) {
       setFormData({
-        imageUrl: item.imageUrl,
-        newImage: null,
+        imageUrls: item.imageUrls,
+        newImages: [],
         name: item.name,
         category: item.category,
         seasons: item.seasons,
@@ -108,8 +109,12 @@ export const useClothesDetail = (): UseClothesDetailReturn => {
     setIsEditing(false);
   }, [item]);
 
-  const setNewImage = useCallback((file: File | null) => {
-    setFormData((prev) => ({ ...prev, newImage: file }));
+  const setImageUrls = useCallback((urls: string[]) => {
+    setFormData((prev) => ({ ...prev, imageUrls: urls }));
+  }, []);
+
+  const setNewImages = useCallback((files: File[]) => {
+    setFormData((prev) => ({ ...prev, newImages: files }));
   }, []);
 
   const setName = useCallback((name: string) => {
@@ -171,15 +176,20 @@ export const useClothesDetail = (): UseClothesDetailReturn => {
         throw new Error("카테고리를 선택해주세요");
       }
 
+      // 최소 1장의 이미지 필요 (기존 이미지 + 새 이미지)
+      if (formData.imageUrls.length === 0 && formData.newImages.length === 0) {
+        throw new Error("이미지가 최소 1장 필요합니다");
+      }
+
       setIsSubmitting(true);
       setErrors((prev) => ({ ...prev, password: undefined }));
 
       try {
         const submitFormData = new FormData();
         submitFormData.append("id", item.id);
-        if (formData.newImage) {
-          submitFormData.append("image", formData.newImage);
-        }
+        formData.newImages.forEach((image) => {
+          submitFormData.append("images", image);
+        });
         submitFormData.append(
           "data",
           JSON.stringify({
@@ -187,6 +197,7 @@ export const useClothesDetail = (): UseClothesDetailReturn => {
             category: formData.category,
             seasons: formData.seasons,
             purchaseLink: formData.purchaseLink.trim() || null,
+            existingImageUrls: formData.imageUrls,
           })
         );
         submitFormData.append("password", password);
@@ -201,8 +212,8 @@ export const useClothesDetail = (): UseClothesDetailReturn => {
         const updatedItem = result.data!;
         setItem(updatedItem);
         setFormData({
-          imageUrl: updatedItem.imageUrl,
-          newImage: null,
+          imageUrls: updatedItem.imageUrls,
+          newImages: [],
           name: updatedItem.name,
           category: updatedItem.category,
           seasons: updatedItem.seasons,
@@ -270,7 +281,8 @@ export const useClothesDetail = (): UseClothesDetailReturn => {
     loadItem,
     startEditing,
     cancelEditing,
-    setNewImage,
+    setImageUrls,
+    setNewImages,
     setName,
     setCategory,
     setSeasons,

@@ -15,6 +15,36 @@ const verifyPassword = (password: string): boolean => {
   return password === adminPassword;
 };
 
+// Next.js 서버 액션에서 FormData 키의 prefix를 제거하는 헬퍼
+const getFormValue = (formData: FormData, key: string): FormDataEntryValue | null => {
+  // 직접 키로 먼저 시도
+  const direct = formData.get(key);
+  if (direct !== null) return direct;
+
+  // prefix가 붙은 키 검색 (예: "1_images", "2_data")
+  for (const [k, v] of formData.entries()) {
+    if (k === key || k.endsWith(`_${key}`)) {
+      return v;
+    }
+  }
+  return null;
+};
+
+const getFormValues = (formData: FormData, key: string): FormDataEntryValue[] => {
+  // 직접 키로 먼저 시도
+  const direct = formData.getAll(key);
+  if (direct.length > 0) return direct;
+
+  // prefix가 붙은 키 검색
+  const values: FormDataEntryValue[] = [];
+  for (const [k, v] of formData.entries()) {
+    if (k === key || k.endsWith(`_${key}`)) {
+      values.push(v);
+    }
+  }
+  return values;
+};
+
 interface ActionResult<T> {
   success: boolean;
   data?: T;
@@ -32,40 +62,61 @@ export const createClothesAction = async (
   formData: FormData
 ): Promise<ActionResult<ClothingItem>> => {
   try {
-    const password = formData.get("password") as string;
+    const password = getFormValue(formData, "password") as string;
     if (!verifyPassword(password)) {
       return { success: false, error: "비밀번호가 올바르지 않습니다" };
     }
 
-    const image = formData.get("image") as File;
-    const dataJson = formData.get("data") as string;
+    const images = getFormValues(formData, "images") as File[];
+    const dataJson = getFormValue(formData, "data") as string;
     const data: CreateClothesData = JSON.parse(dataJson);
 
-    // 이미지 업로드
-    const fileExt = image.name.split(".").pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from(BUCKET_NAME)
-      .upload(fileName, image, {
-        cacheControl: "3600",
-        upsert: false,
-      });
-
-    if (uploadError) {
-      return { success: false, error: `이미지 업로드 실패: ${uploadError.message}` };
+    if (images.length === 0) {
+      return { success: false, error: "이미지를 최소 1장 선택해주세요" };
     }
 
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from(BUCKET_NAME).getPublicUrl(fileName);
+    if (images.length > 5) {
+      return { success: false, error: "이미지는 최대 5장까지 업로드 가능합니다" };
+    }
+
+    // 모든 이미지 업로드
+    const uploadedFileNames: string[] = [];
+    const imageUrls: string[] = [];
+
+    for (const image of images) {
+      const fileExt = image.name.split(".").pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from(BUCKET_NAME)
+        .upload(fileName, image, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (uploadError) {
+        // 실패 시 이미 업로드된 이미지들 삭제
+        if (uploadedFileNames.length > 0) {
+          await supabase.storage.from(BUCKET_NAME).remove(uploadedFileNames);
+        }
+        return { success: false, error: `이미지 업로드 실패: ${uploadError.message}` };
+      }
+
+      uploadedFileNames.push(fileName);
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from(BUCKET_NAME).getPublicUrl(fileName);
+
+      imageUrls.push(publicUrl);
+    }
 
     // DB 저장
     const { data: dbData, error: dbError } = await supabase
       .from(TABLE_NAME)
       .insert({
         name: data.name,
-        image_url: publicUrl,
+        image_urls: imageUrls,
         category: data.category,
         seasons: data.seasons,
         purchase_link: data.purchaseLink || null,
@@ -74,8 +125,8 @@ export const createClothesAction = async (
       .single();
 
     if (dbError) {
-      // 실패 시 업로드된 이미지 삭제
-      await supabase.storage.from(BUCKET_NAME).remove([fileName]);
+      // 실패 시 업로드된 이미지들 삭제
+      await supabase.storage.from(BUCKET_NAME).remove(uploadedFileNames);
       return { success: false, error: `옷 추가 실패: ${dbError.message}` };
     }
 
@@ -93,40 +144,52 @@ interface UpdateClothesData {
   category?: Category;
   seasons?: Season[];
   purchaseLink?: string | null;
+  existingImageUrls?: string[];
 }
 
 export const updateClothesAction = async (
   formData: FormData
 ): Promise<ActionResult<ClothingItem>> => {
   try {
-    const id = formData.get("id") as string;
-    const password = formData.get("password") as string;
+    const id = getFormValue(formData, "id") as string;
+    const password = getFormValue(formData, "password") as string;
     if (!verifyPassword(password)) {
       return { success: false, error: "비밀번호가 올바르지 않습니다" };
     }
 
-    const image = formData.get("image") as File | null;
-    const dataJson = formData.get("data") as string;
+    const newImages = getFormValues(formData, "images") as File[];
+    const dataJson = getFormValue(formData, "data") as string;
     const data: UpdateClothesData = JSON.parse(dataJson);
 
-    let imageUrl: string | undefined;
-    let oldImagePath: string | null = null;
+    // 기존 이미지 URL 목록 가져오기
+    const { data: existing } = await supabase
+      .from(TABLE_NAME)
+      .select("image_urls")
+      .eq("id", id)
+      .single();
 
-    // 새 이미지가 있으면 업로드
-    if (image && image.size > 0) {
-      // 기존 이미지 경로 가져오기
-      const { data: existing } = await supabase
-        .from(TABLE_NAME)
-        .select("image_url")
-        .eq("id", id)
-        .single();
+    const oldImageUrls: string[] = existing?.image_urls || [];
+    const existingImageUrls: string[] = data.existingImageUrls || [];
 
-      if (existing?.image_url) {
-        const match = existing.image_url.match(new RegExp(`${BUCKET_NAME}/(.+)$`));
-        oldImagePath = match ? match[1] : null;
+    // 삭제할 이미지 경로 추출
+    const deletedImageUrls = oldImageUrls.filter(
+      (url) => !existingImageUrls.includes(url)
+    );
+    const deletedImagePaths: string[] = [];
+    for (const url of deletedImageUrls) {
+      const match = url.match(new RegExp(`${BUCKET_NAME}/(.+)$`));
+      if (match) {
+        deletedImagePaths.push(match[1]);
       }
+    }
 
-      // 새 이미지 업로드
+    // 새 이미지 업로드
+    const uploadedFileNames: string[] = [];
+    const newImageUrls: string[] = [];
+
+    for (const image of newImages) {
+      if (image.size === 0) continue;
+
       const fileExt = image.name.split(".").pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
 
@@ -138,20 +201,46 @@ export const updateClothesAction = async (
         });
 
       if (uploadError) {
+        // 실패 시 이미 업로드된 이미지들 삭제
+        if (uploadedFileNames.length > 0) {
+          await supabase.storage.from(BUCKET_NAME).remove(uploadedFileNames);
+        }
         return { success: false, error: `이미지 업로드 실패: ${uploadError.message}` };
       }
+
+      uploadedFileNames.push(fileName);
 
       const {
         data: { publicUrl },
       } = supabase.storage.from(BUCKET_NAME).getPublicUrl(fileName);
 
-      imageUrl = publicUrl;
+      newImageUrls.push(publicUrl);
+    }
+
+    // 최종 이미지 URL 목록: 유지할 기존 이미지 + 새 이미지
+    const finalImageUrls = [...existingImageUrls, ...newImageUrls];
+
+    if (finalImageUrls.length === 0) {
+      // 새 이미지 업로드 실패 시 롤백
+      if (uploadedFileNames.length > 0) {
+        await supabase.storage.from(BUCKET_NAME).remove(uploadedFileNames);
+      }
+      return { success: false, error: "이미지가 최소 1장 필요합니다" };
+    }
+
+    if (finalImageUrls.length > 5) {
+      // 초과 시 롤백
+      if (uploadedFileNames.length > 0) {
+        await supabase.storage.from(BUCKET_NAME).remove(uploadedFileNames);
+      }
+      return { success: false, error: "이미지는 최대 5장까지 등록 가능합니다" };
     }
 
     // DB 업데이트
-    const updateData: Record<string, unknown> = {};
+    const updateData: Record<string, unknown> = {
+      image_urls: finalImageUrls,
+    };
     if (data.name !== undefined) updateData.name = data.name;
-    if (imageUrl !== undefined) updateData.image_url = imageUrl;
     if (data.category !== undefined) updateData.category = data.category;
     if (data.seasons !== undefined) updateData.seasons = data.seasons;
     if (data.purchaseLink !== undefined) updateData.purchase_link = data.purchaseLink;
@@ -164,12 +253,16 @@ export const updateClothesAction = async (
       .single();
 
     if (dbError) {
+      // 실패 시 새로 업로드한 이미지 삭제
+      if (uploadedFileNames.length > 0) {
+        await supabase.storage.from(BUCKET_NAME).remove(uploadedFileNames);
+      }
       return { success: false, error: `옷 수정 실패: ${dbError.message}` };
     }
 
-    // 이전 이미지 삭제
-    if (oldImagePath && imageUrl) {
-      await supabase.storage.from(BUCKET_NAME).remove([oldImagePath]);
+    // 삭제된 이미지 제거
+    if (deletedImagePaths.length > 0) {
+      await supabase.storage.from(BUCKET_NAME).remove(deletedImagePaths);
     }
 
     return { success: true, data: toClothingItem(dbData as DbClothes) };
@@ -185,23 +278,27 @@ export const deleteClothesAction = async (
   formData: FormData
 ): Promise<ActionResult<void>> => {
   try {
-    const id = formData.get("id") as string;
-    const password = formData.get("password") as string;
+    const id = getFormValue(formData, "id") as string;
+    const password = getFormValue(formData, "password") as string;
     if (!verifyPassword(password)) {
       return { success: false, error: "비밀번호가 올바르지 않습니다" };
     }
 
-    // 기존 이미지 경로 가져오기
+    // 기존 이미지 경로들 가져오기
     const { data: existing } = await supabase
       .from(TABLE_NAME)
-      .select("image_url")
+      .select("image_urls")
       .eq("id", id)
       .single();
 
-    let imagePath: string | null = null;
-    if (existing?.image_url) {
-      const match = existing.image_url.match(new RegExp(`${BUCKET_NAME}/(.+)$`));
-      imagePath = match ? match[1] : null;
+    const imagePaths: string[] = [];
+    if (existing?.image_urls) {
+      for (const url of existing.image_urls) {
+        const match = url.match(new RegExp(`${BUCKET_NAME}/(.+)$`));
+        if (match) {
+          imagePaths.push(match[1]);
+        }
+      }
     }
 
     // DB 삭제
@@ -214,9 +311,9 @@ export const deleteClothesAction = async (
       return { success: false, error: `옷 삭제 실패: ${dbError.message}` };
     }
 
-    // 이미지 삭제
-    if (imagePath) {
-      await supabase.storage.from(BUCKET_NAME).remove([imagePath]);
+    // 이미지들 삭제
+    if (imagePaths.length > 0) {
+      await supabase.storage.from(BUCKET_NAME).remove(imagePaths);
     }
 
     return { success: true };
