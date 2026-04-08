@@ -7,7 +7,7 @@ const TABLE_NAME = "clothes";
 
 export interface CreateClothesInput {
   name: string;
-  image: File;
+  images: File[];
   category: Category;
   seasons: Season[];
   purchaseLink?: string;
@@ -15,7 +15,8 @@ export interface CreateClothesInput {
 
 export interface UpdateClothesInput {
   name?: string;
-  image?: File;
+  newImages?: File[];
+  existingImageUrls?: string[];
   category?: Category;
   seasons?: Season[];
   purchaseLink?: string | null;
@@ -51,13 +52,18 @@ export const getClothesById = async (id: string): Promise<ClothingItem> => {
 export const createClothes = async (
   input: CreateClothesInput
 ): Promise<ClothingItem> => {
-  const { url: imageUrl } = await uploadImage(input.image);
+  const imageUrls: string[] = [];
+
+  for (const image of input.images) {
+    const { url } = await uploadImage(image);
+    imageUrls.push(url);
+  }
 
   const { data, error } = await supabase
     .from(TABLE_NAME)
     .insert({
       name: input.name,
-      image_url: imageUrl,
+      image_urls: imageUrls,
       category: input.category,
       seasons: input.seasons,
       purchase_link: input.purchaseLink || null,
@@ -76,21 +82,36 @@ export const updateClothes = async (
   id: string,
   input: UpdateClothesInput
 ): Promise<ClothingItem> => {
-  let imageUrl: string | undefined;
+  const existing = await getClothesById(id);
 
-  if (input.image) {
-    const existing = await getClothesById(id);
-    const oldPath = getImagePathFromUrl(existing.imageUrl);
-    if (oldPath) {
-      await deleteImage(oldPath);
+  // 삭제할 이미지 처리
+  const existingUrls = input.existingImageUrls || [];
+  const deletedUrls = existing.imageUrls.filter(
+    (url) => !existingUrls.includes(url)
+  );
+
+  for (const url of deletedUrls) {
+    const path = getImagePathFromUrl(url);
+    if (path) {
+      await deleteImage(path);
     }
-    const { url } = await uploadImage(input.image);
-    imageUrl = url;
   }
 
-  const updateData: Record<string, unknown> = {};
+  // 새 이미지 업로드
+  const newImageUrls: string[] = [];
+  if (input.newImages) {
+    for (const image of input.newImages) {
+      const { url } = await uploadImage(image);
+      newImageUrls.push(url);
+    }
+  }
+
+  const finalImageUrls = [...existingUrls, ...newImageUrls];
+
+  const updateData: Record<string, unknown> = {
+    image_urls: finalImageUrls,
+  };
   if (input.name !== undefined) updateData.name = input.name;
-  if (imageUrl !== undefined) updateData.image_url = imageUrl;
   if (input.category !== undefined) updateData.category = input.category;
   if (input.seasons !== undefined) updateData.seasons = input.seasons;
   if (input.purchaseLink !== undefined)
@@ -112,7 +133,6 @@ export const updateClothes = async (
 
 export const deleteClothes = async (id: string): Promise<void> => {
   const existing = await getClothesById(id);
-  const imagePath = getImagePathFromUrl(existing.imageUrl);
 
   const { error } = await supabase.from(TABLE_NAME).delete().eq("id", id);
 
@@ -120,7 +140,11 @@ export const deleteClothes = async (id: string): Promise<void> => {
     throw new Error(`옷 삭제 실패: ${error.message}`);
   }
 
-  if (imagePath) {
-    await deleteImage(imagePath);
+  // 모든 이미지 삭제
+  for (const url of existing.imageUrls) {
+    const imagePath = getImagePathFromUrl(url);
+    if (imagePath) {
+      await deleteImage(imagePath);
+    }
   }
 };

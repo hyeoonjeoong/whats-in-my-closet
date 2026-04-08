@@ -7,7 +7,7 @@ import {
   Modal,
   Button,
   Input,
-  ImageUpload,
+  MultiImageUpload,
   TagSelect,
   RadioGroup,
   PasswordModal,
@@ -30,7 +30,7 @@ export const AddClothesModal = ({
     formData,
     errors,
     isSubmitting,
-    setImage,
+    setImages,
     setName,
     setCategory,
     setSeasons,
@@ -75,10 +75,10 @@ export const AddClothesModal = ({
     <>
       <Modal isOpen={isOpen} onClose={handleClose} title="옷 추가">
         <form onSubmit={handleSubmitClick} className="space-y-5">
-          <ImageUpload
-            value={formData.image}
-            onChange={setImage}
-            error={errors.image}
+          <MultiImageUpload
+            value={formData.images}
+            onChange={setImages}
+            error={errors.images}
           />
 
           <Input
