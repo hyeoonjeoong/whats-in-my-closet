@@ -1,4 +1,4 @@
-export { FilterBar } from "./FilterBar";
+export { HierarchicalFilterBar } from "./HierarchicalFilterBar";
 export { ClothesCard } from "./ClothesCard";
 export { ClothesList } from "./ClothesList";
 export { AddClothesModal } from "./AddClothesModal";
