@@ -7,7 +7,7 @@ CREATE TABLE clothes (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   image_urls TEXT[] NOT NULL DEFAULT '{}',
-  category TEXT NOT NULL CHECK (category IN ('top', 'bottom', 'outer', 'accessory', 'shoes', 'bag')),
+  categories TEXT[] NOT NULL DEFAULT '{}',
   seasons TEXT[] NOT NULL DEFAULT '{}',
   purchase_link TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -33,7 +33,7 @@ CREATE TABLE outfit_items (
 );
 
 -- 인덱스: 조회 성능 향상
-CREATE INDEX idx_clothes_category ON clothes(category);
+CREATE INDEX idx_clothes_categories ON clothes USING GIN(categories);
 CREATE INDEX idx_clothes_seasons ON clothes USING GIN(seasons);
 CREATE INDEX idx_outfits_seasons ON outfits USING GIN(seasons);
 CREATE INDEX idx_outfit_items_outfit ON outfit_items(outfit_id);
