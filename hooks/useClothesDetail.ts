@@ -6,13 +6,13 @@ import {
   updateClothesAction,
   deleteClothesAction,
 } from "@/lib/actions/clothes";
-import type { Category, Season, ClothingItem } from "@/types";
+import type { SubCategory, Season, ClothingItem } from "@/types";
 
 interface FormData {
   imageUrls: string[];
   newImages: File[];
   name: string;
-  category: Category | null;
+  categories: SubCategory[];
   seasons: Season[];
   purchaseLink: string;
 }
@@ -39,7 +39,7 @@ interface UseClothesDetailReturn {
   setImageUrls: (urls: string[]) => void;
   setNewImages: (files: File[]) => void;
   setName: (name: string) => void;
-  setCategory: (category: Category) => void;
+  setCategories: (categories: SubCategory[]) => void;
   setSeasons: (seasons: Season[]) => void;
   setPurchaseLink: (link: string) => void;
   submitEdit: (password: string) => Promise<ClothingItem>;
@@ -52,7 +52,7 @@ const initialFormData: FormData = {
   imageUrls: [],
   newImages: [],
   name: "",
-  category: null,
+  categories: [],
   seasons: [],
   purchaseLink: "",
 };
@@ -81,7 +81,7 @@ export const useClothesDetail = (): UseClothesDetailReturn => {
         imageUrls: loadedItem.imageUrls,
         newImages: [],
         name: loadedItem.name,
-        category: loadedItem.category,
+        categories: loadedItem.categories,
         seasons: loadedItem.seasons,
         purchaseLink: loadedItem.purchaseLink ?? "",
       });
@@ -100,7 +100,7 @@ export const useClothesDetail = (): UseClothesDetailReturn => {
         imageUrls: item.imageUrls,
         newImages: [],
         name: item.name,
-        category: item.category,
+        categories: item.categories,
         seasons: item.seasons,
         purchaseLink: item.purchaseLink ?? "",
       });
@@ -122,8 +122,8 @@ export const useClothesDetail = (): UseClothesDetailReturn => {
     setErrors((prev) => ({ ...prev, name: undefined }));
   }, []);
 
-  const setCategory = useCallback((category: Category) => {
-    setFormData((prev) => ({ ...prev, category }));
+  const setCategories = useCallback((categories: SubCategory[]) => {
+    setFormData((prev) => ({ ...prev, categories }));
     setErrors((prev) => ({ ...prev, category: undefined }));
   }, []);
 
@@ -146,8 +146,8 @@ export const useClothesDetail = (): UseClothesDetailReturn => {
       newErrors.name = "이름은 50자 이하로 입력해주세요";
     }
 
-    if (!formData.category) {
-      newErrors.category = "카테고리를 선택해주세요";
+    if (formData.categories.length === 0) {
+      newErrors.category = "카테고리를 최소 1개 선택해주세요";
     }
 
     if (formData.seasons.length === 0) {
@@ -172,8 +172,8 @@ export const useClothesDetail = (): UseClothesDetailReturn => {
         throw new Error("입력값을 확인해주세요");
       }
 
-      if (!formData.category) {
-        throw new Error("카테고리를 선택해주세요");
+      if (formData.categories.length === 0) {
+        throw new Error("카테고리를 최소 1개 선택해주세요");
       }
 
       // 최소 1장의 이미지 필요 (기존 이미지 + 새 이미지)
@@ -194,7 +194,7 @@ export const useClothesDetail = (): UseClothesDetailReturn => {
           "data",
           JSON.stringify({
             name: formData.name.trim(),
-            category: formData.category,
+            categories: formData.categories,
             seasons: formData.seasons,
             purchaseLink: formData.purchaseLink.trim() || null,
             existingImageUrls: formData.imageUrls,
@@ -215,7 +215,7 @@ export const useClothesDetail = (): UseClothesDetailReturn => {
           imageUrls: updatedItem.imageUrls,
           newImages: [],
           name: updatedItem.name,
-          category: updatedItem.category,
+          categories: updatedItem.categories,
           seasons: updatedItem.seasons,
           purchaseLink: updatedItem.purchaseLink ?? "",
         });
@@ -284,7 +284,7 @@ export const useClothesDetail = (): UseClothesDetailReturn => {
     setImageUrls,
     setNewImages,
     setName,
-    setCategory,
+    setCategories,
     setSeasons,
     setPurchaseLink,
     submitEdit,

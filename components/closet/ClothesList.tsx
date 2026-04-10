@@ -20,9 +20,12 @@ export const ClothesList = ({ items, filters, onItemClick }: ClothesListProps) =
       if (!hasMatchingSeason) return false;
     }
 
-    // 카테고리 필터
+    // 카테고리 필터 (item.categories 배열과 교집합 확인)
     if (filters.categories.length > 0) {
-      if (!filters.categories.includes(item.category)) return false;
+      const hasMatchingCategory = item.categories.some((c) =>
+        filters.categories.includes(c)
+      );
+      if (!hasMatchingCategory) return false;
     }
 
     return true;

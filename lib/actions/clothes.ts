@@ -1,7 +1,7 @@
 "use server";
 
 import { supabase } from "../supabase";
-import type { DbClothes, ClothingItem, Category, Season } from "@/types";
+import type { DbClothes, ClothingItem, SubCategory, Season } from "@/types";
 import { toClothingItem } from "@/types";
 
 const TABLE_NAME = "clothes";
@@ -53,7 +53,7 @@ interface ActionResult<T> {
 
 interface CreateClothesData {
   name: string;
-  category: Category;
+  categories: SubCategory[];
   seasons: Season[];
   purchaseLink?: string;
 }
@@ -117,7 +117,7 @@ export const createClothesAction = async (
       .insert({
         name: data.name,
         image_urls: imageUrls,
-        category: data.category,
+        categories: data.categories,
         seasons: data.seasons,
         purchase_link: data.purchaseLink || null,
       })
@@ -141,7 +141,7 @@ export const createClothesAction = async (
 
 interface UpdateClothesData {
   name?: string;
-  category?: Category;
+  categories?: SubCategory[];
   seasons?: Season[];
   purchaseLink?: string | null;
   existingImageUrls?: string[];
@@ -241,7 +241,7 @@ export const updateClothesAction = async (
       image_urls: finalImageUrls,
     };
     if (data.name !== undefined) updateData.name = data.name;
-    if (data.category !== undefined) updateData.category = data.category;
+    if (data.categories !== undefined) updateData.categories = data.categories;
     if (data.seasons !== undefined) updateData.seasons = data.seasons;
     if (data.purchaseLink !== undefined) updateData.purchase_link = data.purchaseLink;
 

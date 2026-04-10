@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import {
-  FilterBar,
+  HierarchicalFilterBar,
   ClothesList,
   AddClothesModal,
   ClothesDetailModal,
@@ -17,7 +17,15 @@ export default function ClosetPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const { clothes, isLoading, error, refetch } = useClothes();
-  const { filters, toggleSeason, toggleCategory, resetFilters } = useFilter();
+  const {
+    filters,
+    toggleSeason,
+    toggleCategory,
+    toggleMainCategory,
+    isMainCategoryFullySelected,
+    isMainCategoryPartiallySelected,
+    resetFilters,
+  } = useFilter();
 
   const handleAddSuccess = (newItem: ClothingItem) => {
     console.log("새 옷 추가됨:", newItem.name);
@@ -57,11 +65,14 @@ export default function ClosetPage() {
   return (
     <>
       <div className="space-y-6">
-        <FilterBar
+        <HierarchicalFilterBar
           selectedSeasons={filters.seasons}
           selectedCategories={filters.categories}
           onSeasonToggle={toggleSeason}
           onCategoryToggle={toggleCategory}
+          onMainCategoryToggle={toggleMainCategory}
+          isMainCategoryFullySelected={isMainCategoryFullySelected}
+          isMainCategoryPartiallySelected={isMainCategoryPartiallySelected}
           onReset={resetFilters}
         />
 
