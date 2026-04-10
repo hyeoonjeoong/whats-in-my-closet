@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { SEASONS } from "@/lib/constants";
-import type { Outfit, ClothingItem } from "@/types";
+import { SUB_TO_MAIN_CATEGORY } from "@/lib/constants";
+import type { Outfit, ClothingItem, MainCategory } from "@/types";
 
 interface OutfitCardProps {
   outfit: Outfit;
@@ -34,17 +34,19 @@ const Slot = ({ item, className }: SlotProps) => {
 };
 
 export const OutfitCard = ({ outfit, onClick }: OutfitCardProps) => {
-  const seasonLabels = outfit.seasons
-    .map((s) => SEASONS.find((season) => season.value === s)?.label ?? s)
-    .join(", ");
+  // 아이템의 메인 카테고리 결정
+  const getMainCategory = (item: ClothingItem): MainCategory => {
+    if (item.categories.length === 0) return "accessory";
+    return SUB_TO_MAIN_CATEGORY[item.categories[0]];
+  };
 
   // 카테고리별 아이템 분류
-  const top = outfit.items.find((item) => item.category === "top");
-  const outer = outfit.items.find((item) => item.category === "outer");
-  const bottom = outfit.items.find((item) => item.category === "bottom");
-  const shoes = outfit.items.find((item) => item.category === "shoes");
-  const bag = outfit.items.find((item) => item.category === "bag");
-  const accessory = outfit.items.find((item) => item.category === "accessory");
+  const top = outfit.items.find((item) => getMainCategory(item) === "top");
+  const outer = outfit.items.find((item) => getMainCategory(item) === "outer");
+  const bottom = outfit.items.find((item) => getMainCategory(item) === "bottom");
+  const shoes = outfit.items.find((item) => getMainCategory(item) === "shoes");
+  const bag = outfit.items.find((item) => getMainCategory(item) === "bag");
+  const accessory = outfit.items.find((item) => getMainCategory(item) === "accessory");
 
   return (
     <button
@@ -56,35 +58,44 @@ export const OutfitCard = ({ outfit, onClick }: OutfitCardProps) => {
         "text-left"
       )}
     >
-      {/* 콜라주 썸네일 - OutfitCollage 레이아웃 */}
-      <div className="overflow-hidden bg-secondary-3/30 p-2">
-        <div className="flex flex-col items-center gap-1">
+      {/* 콜라주 썸네일 - 등록된 아이템만 표시 */}
+      <div className="overflow-hidden bg-secondary-3/30 p-3">
+        <div className="flex flex-col items-center gap-1.5">
           {/* 1행: 상의 | 아우터 */}
-          <div className="flex justify-center gap-1">
-            <Slot item={top} className="w-12" />
-            <Slot item={outer} className="w-12" />
-          </div>
+          {(top || outer) && (
+            top && outer ? (
+              <div className="flex justify-center gap-1">
+                <Slot item={top} className="w-12" />
+                <Slot item={outer} className="w-12" />
+              </div>
+            ) : (
+              <Slot item={top || outer} className="w-12" />
+            )
+          )}
 
           {/* 2행: 하의 */}
-          <Slot item={bottom} className="w-12" />
+          {bottom && <Slot item={bottom} className="w-12" />}
 
           {/* 3행: 신발 */}
-          <Slot item={shoes} className="w-10" />
+          {shoes && <Slot item={shoes} className="w-10" />}
 
           {/* 4행: 가방 | 악세 */}
-          <div className="flex justify-center gap-1">
-            <Slot item={bag} className="w-8" />
-            <Slot item={accessory} className="w-8" />
-          </div>
+          {(bag || accessory) && (
+            bag && accessory ? (
+              <div className="flex justify-center gap-1">
+                <Slot item={bag} className="w-8" />
+                <Slot item={accessory} className="w-8" />
+              </div>
+            ) : (
+              <Slot item={bag || accessory} className="w-8" />
+            )
+          )}
         </div>
       </div>
 
-      {/* 정보 영역 */}
-      <div className="p-3">
-        <h3 className="font-medium text-primary truncate">{outfit.name}</h3>
-        {seasonLabels && (
-          <p className="mt-1 text-xs text-secondary-1">{seasonLabels}</p>
-        )}
+      {/* 정보 영역 - 컴팩트하게 */}
+      <div className="px-2 py-1.5">
+        <p className="text-xs font-medium text-primary truncate">{outfit.name}</p>
       </div>
     </button>
   );

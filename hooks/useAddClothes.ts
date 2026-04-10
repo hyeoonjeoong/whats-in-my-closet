@@ -2,12 +2,12 @@
 
 import { useState, useCallback } from "react";
 import { createClothesAction } from "@/lib/actions/clothes";
-import type { Category, Season, ClothingItem } from "@/types";
+import type { SubCategory, Season, ClothingItem } from "@/types";
 
 interface FormData {
   images: File[];
   name: string;
-  category: Category | null;
+  categories: SubCategory[];
   seasons: Season[];
   purchaseLink: string;
 }
@@ -27,7 +27,7 @@ interface UseAddClothesReturn {
   isSubmitting: boolean;
   setImages: (files: File[]) => void;
   setName: (name: string) => void;
-  setCategory: (category: Category) => void;
+  setCategories: (categories: SubCategory[]) => void;
   setSeasons: (seasons: Season[]) => void;
   setPurchaseLink: (link: string) => void;
   validate: () => boolean;
@@ -39,7 +39,7 @@ interface UseAddClothesReturn {
 const initialFormData: FormData = {
   images: [],
   name: "",
-  category: null,
+  categories: [],
   seasons: [],
   purchaseLink: "",
 };
@@ -61,8 +61,8 @@ export const useAddClothes = (): UseAddClothesReturn => {
     setErrors((prev) => ({ ...prev, name: undefined }));
   }, []);
 
-  const setCategory = useCallback((category: Category) => {
-    setFormData((prev) => ({ ...prev, category }));
+  const setCategories = useCallback((categories: SubCategory[]) => {
+    setFormData((prev) => ({ ...prev, categories }));
     setErrors((prev) => ({ ...prev, category: undefined }));
   }, []);
 
@@ -89,8 +89,8 @@ export const useAddClothes = (): UseAddClothesReturn => {
       newErrors.name = "이름은 50자 이하로 입력해주세요";
     }
 
-    if (!formData.category) {
-      newErrors.category = "카테고리를 선택해주세요";
+    if (formData.categories.length === 0) {
+      newErrors.category = "카테고리를 최소 1개 선택해주세요";
     }
 
     if (formData.seasons.length === 0) {
@@ -110,7 +110,7 @@ export const useAddClothes = (): UseAddClothesReturn => {
       throw new Error("입력값을 확인해주세요");
     }
 
-    if (formData.images.length === 0 || !formData.category) {
+    if (formData.images.length === 0 || formData.categories.length === 0) {
       throw new Error("필수 항목을 입력해주세요");
     }
 
@@ -126,7 +126,7 @@ export const useAddClothes = (): UseAddClothesReturn => {
         "data",
         JSON.stringify({
           name: formData.name.trim(),
-          category: formData.category,
+          categories: formData.categories,
           seasons: formData.seasons,
           purchaseLink: formData.purchaseLink.trim() || undefined,
         })
@@ -161,7 +161,7 @@ export const useAddClothes = (): UseAddClothesReturn => {
     isSubmitting,
     setImages,
     setName,
-    setCategory,
+    setCategories,
     setSeasons,
     setPurchaseLink,
     validate,

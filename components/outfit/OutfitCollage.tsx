@@ -2,11 +2,11 @@
 
 import { CollageSlot } from "./CollageSlot";
 import type { OutfitSelection } from "@/hooks/useOutfitBuilder";
-import type { Category, ClothingItem } from "@/types";
+import type { MainCategory, ClothingItem } from "@/types";
 
 interface OutfitCollageProps {
   selection: OutfitSelection;
-  onRemove?: (category: Category, itemId?: string) => void;
+  onRemove?: (category: MainCategory, itemId?: string) => void;
   onItemClick?: (item: ClothingItem) => void;
   editable?: boolean;
 }

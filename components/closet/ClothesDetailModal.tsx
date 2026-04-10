@@ -4,18 +4,17 @@ import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { ExternalLink, ImagePlus, X, Star } from "lucide-react";
 import { useClothesDetail } from "@/hooks/useClothesDetail";
-import { SEASONS, CATEGORIES } from "@/lib/constants";
 import {
   Modal,
   Button,
   Input,
-  TagSelect,
-  RadioGroup,
+  HierarchicalSeasonSelect,
+  HierarchicalCategorySelect,
   IconButton,
   PasswordModal,
 } from "@/components/ui";
 import { cn } from "@/lib/utils";
-import type { ClothingItem, Category, Season } from "@/types";
+import type { ClothingItem, SubCategory, Season } from "@/types";
 
 interface ClothesDetailModalProps {
   isOpen: boolean;
@@ -49,7 +48,7 @@ export const ClothesDetailModal = ({
     setImageUrls,
     setNewImages,
     setName,
-    setCategory,
+    setCategories,
     setSeasons,
     setPurchaseLink,
     submitEdit,
@@ -146,7 +145,7 @@ export const ClothesDetailModal = ({
             setImageUrls={setImageUrls}
             setNewImages={setNewImages}
             setName={setName}
-            setCategory={setCategory}
+            setCategories={setCategories}
             setSeasons={setSeasons}
             setPurchaseLink={setPurchaseLink}
           />
@@ -260,18 +259,14 @@ const ViewMode = ({
       {/* 정보 - 등록/수정과 동일한 UI */}
       <Input label="이름" value={item.name} disabled readOnly />
 
-      <RadioGroup
+      <HierarchicalCategorySelect
         label="카테고리"
-        options={CATEGORIES}
-        value={item.category}
-        disabled
+        value={item.categories}
       />
 
-      <TagSelect
+      <HierarchicalSeasonSelect
         label="계절"
-        options={SEASONS}
         value={item.seasons}
-        disabled
       />
 
       <div>
@@ -344,7 +339,7 @@ interface EditModeProps {
     imageUrls: string[];
     newImages: File[];
     name: string;
-    category: Category | null;
+    categories: SubCategory[];
     seasons: Season[];
     purchaseLink: string;
   };
@@ -359,7 +354,7 @@ interface EditModeProps {
   setImageUrls: (urls: string[]) => void;
   setNewImages: (files: File[]) => void;
   setName: (name: string) => void;
-  setCategory: (category: Category) => void;
+  setCategories: (categories: SubCategory[]) => void;
   setSeasons: (seasons: Season[]) => void;
   setPurchaseLink: (link: string) => void;
 }
@@ -376,7 +371,7 @@ const EditMode = ({
   setImageUrls,
   setNewImages,
   setName,
-  setCategory,
+  setCategories,
   setSeasons,
   setPurchaseLink,
 }: EditModeProps) => {
@@ -611,17 +606,15 @@ const EditMode = ({
         maxLength={50}
       />
 
-      <RadioGroup
+      <HierarchicalCategorySelect
         label="카테고리"
-        options={CATEGORIES}
-        value={formData.category}
-        onChange={setCategory}
+        value={formData.categories}
+        onChange={setCategories}
         error={errors.category}
       />
 
-      <TagSelect
+      <HierarchicalSeasonSelect
         label="계절"
-        options={SEASONS}
         value={formData.seasons}
         onChange={setSeasons}
         error={errors.seasons}

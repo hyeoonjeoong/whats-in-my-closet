@@ -3,11 +3,11 @@
 import Image from "next/image";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { ClothingItem, Category } from "@/types";
-import { CATEGORIES } from "@/lib/constants";
+import type { ClothingItem, MainCategory } from "@/types";
+import { MAIN_CATEGORIES } from "@/lib/constants";
 
 interface CollageSlotProps {
-  category: Category;
+  category: MainCategory;
   item: ClothingItem | null;
   onRemove?: () => void;
   onClick?: () => void;
@@ -29,7 +29,7 @@ export const CollageSlot = ({
   size = "md",
   className,
 }: CollageSlotProps) => {
-  const categoryLabel = CATEGORIES.find((c) => c.value === category)?.label ?? category;
+  const categoryLabel = MAIN_CATEGORIES.find((c) => c.value === category)?.label ?? category;
 
   if (!item) {
     return (

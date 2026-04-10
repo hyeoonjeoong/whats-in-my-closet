@@ -2,14 +2,13 @@
 
 import { useState } from "react";
 import { useAddClothes } from "@/hooks/useAddClothes";
-import { SEASONS, CATEGORIES } from "@/lib/constants";
 import {
   Modal,
   Button,
   Input,
   MultiImageUpload,
-  TagSelect,
-  RadioGroup,
+  HierarchicalSeasonSelect,
+  HierarchicalCategorySelect,
   PasswordModal,
 } from "@/components/ui";
 import type { ClothingItem } from "@/types";
@@ -32,7 +31,7 @@ export const AddClothesModal = ({
     isSubmitting,
     setImages,
     setName,
-    setCategory,
+    setCategories,
     setSeasons,
     setPurchaseLink,
     validate,
@@ -90,17 +89,15 @@ export const AddClothesModal = ({
             maxLength={50}
           />
 
-          <RadioGroup
+          <HierarchicalCategorySelect
             label="카테고리"
-            options={CATEGORIES}
-            value={formData.category}
-            onChange={setCategory}
+            value={formData.categories}
+            onChange={setCategories}
             error={errors.category}
           />
 
-          <TagSelect
+          <HierarchicalSeasonSelect
             label="계절"
-            options={SEASONS}
             value={formData.seasons}
             onChange={setSeasons}
             error={errors.seasons}

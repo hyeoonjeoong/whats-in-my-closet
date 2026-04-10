@@ -1,15 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Input, Button, TagSelect, PasswordModal } from "@/components/ui";
-import { SEASONS } from "@/lib/constants";
-import type { Season } from "@/types";
+import { Input, Button, PasswordModal, HierarchicalSeasonSelect } from "@/components/ui";
+import { STYLES } from "@/lib/constants";
+import type { Season, Style } from "@/types";
 
 interface OutfitSaveSectionProps {
   defaultName?: string;
   placeholderName?: string;
   defaultSeasons?: Season[];
-  onSave: (data: { name: string; seasons: Season[]; password: string }) => void;
+  defaultStyles?: Style[];
+  onSave: (data: { name: string; seasons: Season[]; styles: Style[]; password: string }) => void;
   isLoading?: boolean;
   hasSelection: boolean;
   submitLabel?: string;
@@ -19,6 +20,7 @@ export const OutfitSaveSection = ({
   defaultName = "",
   placeholderName = "",
   defaultSeasons = [],
+  defaultStyles = [],
   onSave,
   isLoading = false,
   hasSelection,
@@ -26,7 +28,16 @@ export const OutfitSaveSection = ({
 }: OutfitSaveSectionProps) => {
   const [name, setName] = useState(defaultName);
   const [seasons, setSeasons] = useState<Season[]>(defaultSeasons);
+  const [styles, setStyles] = useState<Style[]>(defaultStyles);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+
+  const handleStyleToggle = (style: Style) => {
+    if (styles.includes(style)) {
+      setStyles(styles.filter((s) => s !== style));
+    } else {
+      setStyles([...styles, style]);
+    }
+  };
 
   const handleSubmit = () => {
     if (!hasSelection) return;
@@ -35,12 +46,12 @@ export const OutfitSaveSection = ({
 
   const handlePasswordConfirm = async (password: string) => {
     const finalName = name.trim() || placeholderName || "코디";
-    onSave({ name: finalName, seasons, password });
+    onSave({ name: finalName, seasons, styles, password });
     setIsPasswordModalOpen(false);
   };
 
   return (
-    <div className="space-y-4 rounded-xl bg-white p-4 shadow-sm">
+    <div className="space-y-4">
       <Input
         label="코디 이름"
         placeholder={placeholderName || "예: 봄 데일리룩"}
@@ -49,13 +60,32 @@ export const OutfitSaveSection = ({
         disabled={isLoading}
       />
 
-      <TagSelect
+      <HierarchicalSeasonSelect
         label="계절"
-        options={SEASONS}
         value={seasons}
         onChange={setSeasons}
-        disabled={isLoading}
       />
+
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-primary">
+          스타일
+        </label>
+        <div className="flex flex-wrap gap-1.5">
+          {STYLES.map(({ value, label }) => (
+            <Button
+              key={value}
+              type="button"
+              variant="chip"
+              size="sm"
+              selected={styles.includes(value)}
+              onClick={() => handleStyleToggle(value)}
+              disabled={isLoading}
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
+      </div>
 
       <Button
         onClick={handleSubmit}

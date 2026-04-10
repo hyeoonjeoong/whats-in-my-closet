@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { ExternalLink } from "lucide-react";
 import type { ClothingItem } from "@/types";
-import { SEASONS, CATEGORIES } from "@/lib/constants";
+import { SEASONS, ALL_SEASONS, getSubCategoryLabel } from "@/lib/constants";
 
 interface ClothesCardProps {
   item: ClothingItem;
@@ -11,12 +11,19 @@ interface ClothesCardProps {
 }
 
 export const ClothesCard = ({ item, onClick }: ClothesCardProps) => {
-  const categoryLabel =
-    CATEGORIES.find((c) => c.value === item.category)?.label ?? item.category;
+  // 카테고리 라벨 (다중 카테고리면 +N 표시)
+  const categoryLabel = item.categories.length > 0
+    ? getSubCategoryLabel(item.categories[0])
+    : "";
+  const categoryExtra = item.categories.length > 1 ? ` +${item.categories.length - 1}` : "";
 
-  const seasonLabels = item.seasons
-    .map((s) => SEASONS.find((season) => season.value === s)?.label ?? s)
-    .join(", ");
+  // 계절 라벨 (전체 선택 시 "계절무관")
+  const isAllSeasons = ALL_SEASONS.every((s) => item.seasons.includes(s));
+  const seasonLabel = isAllSeasons
+    ? "계절무관"
+    : item.seasons
+        .map((s) => SEASONS.find((season) => season.value === s)?.label ?? s)
+        .join(", ");
 
   return (
     <div
@@ -49,11 +56,9 @@ export const ClothesCard = ({ item, onClick }: ClothesCardProps) => {
       {/* 정보 영역 */}
       <div className="p-3">
         <h3 className="font-medium text-primary truncate">{item.name}</h3>
-        <div className="mt-1 flex items-center gap-2 text-xs text-secondary-1">
-          <span className="rounded-full bg-secondary-3 px-2 py-0.5">
-            {categoryLabel}
-          </span>
-          <span>{seasonLabels}</span>
+        <div className="mt-1 space-y-0.5 text-xs text-secondary-1">
+          <p className="truncate">{categoryLabel}{categoryExtra}</p>
+          <p className="truncate">{seasonLabel}</p>
         </div>
       </div>
 
