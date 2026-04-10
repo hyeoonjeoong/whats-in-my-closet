@@ -9,7 +9,8 @@ import {
 } from "@/components/outfit";
 import { ClothesDetailModal } from "@/components/closet";
 import { Button, IconButton, PasswordModal, useToast } from "@/components/ui";
-import { SEASONS } from "@/lib/constants";
+import { SEASONS, STYLES, SUB_TO_MAIN_CATEGORY } from "@/lib/constants";
+import type { MainCategory } from "@/types";
 import { useOutfitDetail } from "@/hooks/useOutfits";
 import { deleteOutfitAction } from "@/lib/actions/outfits";
 import type { OutfitSelection } from "@/hooks/useOutfitBuilder";
@@ -53,10 +54,16 @@ export default function OutfitDetailPage({ params }: OutfitDetailPageProps) {
     };
 
     for (const item of outfit.items) {
-      if (item.category === "accessory") {
+      // 첫 번째 하위 카테고리의 상위 카테고리 결정
+      const mainCategory: MainCategory =
+        item.categories.length > 0
+          ? SUB_TO_MAIN_CATEGORY[item.categories[0]]
+          : "accessory";
+
+      if (mainCategory === "accessory") {
         result.accessories.push(item);
       } else {
-        const key = item.category as keyof Omit<OutfitSelection, "accessories">;
+        const key = mainCategory as keyof Omit<OutfitSelection, "accessories">;
         result[key] = item;
       }
     }
@@ -66,6 +73,10 @@ export default function OutfitDetailPage({ params }: OutfitDetailPageProps) {
 
   const seasonLabels = outfit?.seasons
     .map((s) => SEASONS.find((season) => season.value === s)?.label ?? s)
+    .join(", ");
+
+  const styleLabels = outfit?.styles
+    .map((s) => STYLES.find((style) => style.value === s)?.label ?? s)
     .join(", ");
 
   const handleItemClick = (item: ClothingItem) => {
@@ -149,9 +160,10 @@ export default function OutfitDetailPage({ params }: OutfitDetailPageProps) {
         {/* 코디 정보 */}
         <div className="rounded-xl bg-white p-4 shadow-sm">
           <h2 className="text-lg font-semibold text-primary">{outfit.name}</h2>
-          {seasonLabels && (
-            <p className="mt-1 text-sm text-secondary-1">{seasonLabels}</p>
-          )}
+          <div className="mt-1 space-y-0.5 text-sm text-secondary-1">
+            {seasonLabels && <p>{seasonLabels}</p>}
+            {styleLabels && <p>{styleLabels}</p>}
+          </div>
         </div>
 
         {/* 콜라주 */}

@@ -8,14 +8,15 @@ import {
   SelectableClothesGrid,
   OutfitSaveSection,
 } from "@/components/outfit";
-import { FilterBar } from "@/components/closet";
+import { HierarchicalFilterBar } from "@/components/closet";
 import { useToast } from "@/components/ui";
 import { useClothes } from "@/hooks/useClothes";
 import { useFilter } from "@/hooks/useFilter";
 import { useOutfitBuilder } from "@/hooks/useOutfitBuilder";
 import { useOutfitDetail } from "@/hooks/useOutfits";
 import { updateOutfitAction } from "@/lib/actions/outfits";
-import type { Season } from "@/types";
+import { Shirt, Save } from "lucide-react";
+import type { Season, Style } from "@/types";
 
 interface EditOutfitPageProps {
   params: Promise<{ id: string }>;
@@ -26,7 +27,15 @@ export default function EditOutfitPage({ params }: EditOutfitPageProps) {
   const router = useRouter();
   const { clothes, isLoading: isClothesLoading, error: clothesError } = useClothes();
   const { outfit, isLoading: isOutfitLoading, error: outfitError } = useOutfitDetail(id);
-  const { filters, toggleSeason, toggleCategory, resetFilters } = useFilter();
+  const {
+    filters,
+    toggleSeason,
+    toggleCategory,
+    toggleMainCategory,
+    isMainCategoryFullySelected,
+    isMainCategoryPartiallySelected,
+    resetFilters,
+  } = useFilter();
   const {
     selection,
     toggleItem,
@@ -54,7 +63,7 @@ export default function EditOutfitPage({ params }: EditOutfitPageProps) {
     }
   }, [outfit, isInitialized, loadFromOutfit]);
 
-  const handleSave = async (data: { name: string; seasons: Season[]; password: string }) => {
+  const handleSave = async (data: { name: string; seasons: Season[]; styles: Style[]; password: string }) => {
     if (!hasSelection) return;
 
     setIsSaving(true);
@@ -67,6 +76,7 @@ export default function EditOutfitPage({ params }: EditOutfitPageProps) {
         JSON.stringify({
           name: data.name,
           seasons: data.seasons,
+          styles: data.styles,
           clothingIds: selectedIds,
         })
       );
@@ -115,48 +125,78 @@ export default function EditOutfitPage({ params }: EditOutfitPageProps) {
     <div className="flex min-h-screen flex-col bg-background">
       <OutfitHeader title="코디 수정" />
 
-      <main className="flex-1 space-y-6 p-4">
-        {/* 필터 */}
-        <FilterBar
-          selectedSeasons={filters.seasons}
-          selectedCategories={filters.categories}
-          onSeasonToggle={(s) => handleFilterChange(() => toggleSeason(s))}
-          onCategoryToggle={(c) => handleFilterChange(() => toggleCategory(c))}
-          onReset={() => handleFilterChange(resetFilters)}
-        />
-
-        {/* 옷 선택 그리드 */}
-        {clothes.length > 0 ? (
-          <SelectableClothesGrid
-            items={clothes}
-            filters={filters}
-            isSelected={isSelected}
-            onToggle={toggleItem}
-            currentPage={currentPage}
-            onPageChange={setCurrentPage}
-          />
-        ) : (
-          <div className="py-8 text-center text-secondary-1">
-            <p>옷장이 비어있습니다</p>
+      <main className="flex-1 p-4 space-y-6">
+        {/* 상단 섹션: 옷 선택 */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2 text-primary">
+            <Shirt size={18} />
+            <h2 className="font-semibold">내 옷장에서 선택</h2>
           </div>
-        )}
 
-        {/* 콜라주 프리뷰 */}
-        <OutfitCollage
-          selection={selection}
-          onRemove={removeItem}
-          editable
-        />
+          <div className="rounded-xl bg-white p-4 shadow-sm space-y-4">
+            {/* 필터 */}
+            <HierarchicalFilterBar
+              selectedSeasons={filters.seasons}
+              selectedCategories={filters.categories}
+              onSeasonToggle={(s) => handleFilterChange(() => toggleSeason(s))}
+              onCategoryToggle={(c) => handleFilterChange(() => toggleCategory(c))}
+              onMainCategoryToggle={(m) => handleFilterChange(() => toggleMainCategory(m))}
+              isMainCategoryFullySelected={isMainCategoryFullySelected}
+              isMainCategoryPartiallySelected={isMainCategoryPartiallySelected}
+              onReset={() => handleFilterChange(resetFilters)}
+            />
 
-        {/* 저장 섹션 */}
-        <OutfitSaveSection
-          defaultName={outfit.name}
-          defaultSeasons={outfit.seasons}
-          onSave={handleSave}
-          isLoading={isSaving}
-          hasSelection={hasSelection}
-          submitLabel="수정하기"
-        />
+            {/* 옷 선택 그리드 */}
+            {clothes.length > 0 ? (
+              <SelectableClothesGrid
+                items={clothes}
+                filters={filters}
+                isSelected={isSelected}
+                onToggle={toggleItem}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+              />
+            ) : (
+              <div className="py-8 text-center text-secondary-1">
+                <p>옷장이 비어있습니다</p>
+              </div>
+            )}
+          </div>
+
+          {/* 콜라주 프리뷰 */}
+          <OutfitCollage
+            selection={selection}
+            onRemove={removeItem}
+            editable
+          />
+        </section>
+
+        {/* 구분선 */}
+        <div className="flex items-center gap-3">
+          <div className="h-px flex-1 bg-secondary-1/30" />
+          <span className="text-xs text-secondary-1">코디 정보 입력</span>
+          <div className="h-px flex-1 bg-secondary-1/30" />
+        </div>
+
+        {/* 하단 섹션: 코디 정보 */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2 text-primary">
+            <Save size={18} />
+            <h2 className="font-semibold">코디 수정</h2>
+          </div>
+
+          <div className="rounded-xl bg-white p-4 shadow-sm">
+            <OutfitSaveSection
+              defaultName={outfit.name}
+              defaultSeasons={outfit.seasons}
+              defaultStyles={outfit.styles}
+              onSave={handleSave}
+              isLoading={isSaving}
+              hasSelection={hasSelection}
+              submitLabel="수정하기"
+            />
+          </div>
+        </section>
       </main>
     </div>
   );

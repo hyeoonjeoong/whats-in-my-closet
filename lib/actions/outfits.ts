@@ -1,7 +1,7 @@
 "use server";
 
 import { supabase } from "../supabase";
-import type { DbOutfit, DbClothes, Outfit, Season, ClothingItem } from "@/types";
+import type { DbOutfit, DbClothes, Outfit, Season, Style, ClothingItem } from "@/types";
 import { toClothingItem, toOutfit } from "@/types";
 
 const OUTFIT_TABLE = "outfits";
@@ -37,6 +37,7 @@ interface ActionResult<T> {
 interface CreateOutfitData {
   name: string;
   seasons: Season[];
+  styles: Style[];
   clothingIds: string[];
 }
 
@@ -62,6 +63,7 @@ export const createOutfitAction = async (
       .insert({
         name: data.name,
         seasons: data.seasons,
+        styles: data.styles,
       })
       .select()
       .single();
@@ -112,6 +114,7 @@ export const createOutfitAction = async (
 interface UpdateOutfitData {
   name?: string;
   seasons?: Season[];
+  styles?: Style[];
   clothingIds?: string[];
 }
 
@@ -132,6 +135,7 @@ export const updateOutfitAction = async (
     const updateData: Record<string, unknown> = {};
     if (data.name !== undefined) updateData.name = data.name;
     if (data.seasons !== undefined) updateData.seasons = data.seasons;
+    if (data.styles !== undefined) updateData.styles = data.styles;
 
     if (Object.keys(updateData).length > 0) {
       const { error: updateError } = await supabase

@@ -32,7 +32,7 @@ export const SelectableClothesGrid = ({
         item.seasons.some((s) => filters.seasons.includes(s));
       const matchesCategory =
         filters.categories.length === 0 ||
-        filters.categories.includes(item.category);
+        item.categories.some((c) => filters.categories.includes(c));
       return matchesSeason && matchesCategory;
     });
   }, [items, filters]);
