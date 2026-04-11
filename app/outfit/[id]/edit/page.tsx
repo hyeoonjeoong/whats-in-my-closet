@@ -16,7 +16,7 @@ import { useOutfitBuilder } from "@/hooks/useOutfitBuilder";
 import { useOutfitDetail } from "@/hooks/useOutfits";
 import { updateOutfitAction } from "@/lib/actions/outfits";
 import { Shirt, Save } from "lucide-react";
-import type { Season, Style } from "@/types";
+import type { Season, Style, Mood } from "@/types";
 
 interface EditOutfitPageProps {
   params: Promise<{ id: string }>;
@@ -63,7 +63,7 @@ export default function EditOutfitPage({ params }: EditOutfitPageProps) {
     }
   }, [outfit, isInitialized, loadFromOutfit]);
 
-  const handleSave = async (data: { name: string; seasons: Season[]; styles: Style[]; password: string }) => {
+  const handleSave = async (data: { name: string; seasons: Season[]; styles: Style[]; moods: Mood[]; password: string }) => {
     if (!hasSelection) return;
 
     setIsSaving(true);
@@ -77,6 +77,7 @@ export default function EditOutfitPage({ params }: EditOutfitPageProps) {
           name: data.name,
           seasons: data.seasons,
           styles: data.styles,
+          moods: data.moods,
           clothingIds: selectedIds,
         })
       );
@@ -190,6 +191,7 @@ export default function EditOutfitPage({ params }: EditOutfitPageProps) {
               defaultName={outfit.name}
               defaultSeasons={outfit.seasons}
               defaultStyles={outfit.styles}
+              defaultMoods={outfit.moods}
               onSave={handleSave}
               isLoading={isSaving}
               hasSelection={hasSelection}

@@ -16,7 +16,7 @@ import { useFilter } from "@/hooks/useFilter";
 import { useOutfitBuilder } from "@/hooks/useOutfitBuilder";
 import { useOutfits } from "@/hooks/useOutfits";
 import { createOutfitAction } from "@/lib/actions/outfits";
-import type { Season, Style } from "@/types";
+import type { Season, Style, Mood } from "@/types";
 
 export default function NewOutfitPage() {
   const router = useRouter();
@@ -49,7 +49,7 @@ export default function NewOutfitPage() {
     setCurrentPage(1);
   };
 
-  const handleSave = async (data: { name: string; seasons: Season[]; styles: Style[]; password: string }) => {
+  const handleSave = async (data: { name: string; seasons: Season[]; styles: Style[]; moods: Mood[]; password: string }) => {
     if (!hasSelection) return;
 
     setIsSaving(true);
@@ -62,6 +62,7 @@ export default function NewOutfitPage() {
           name: data.name,
           seasons: data.seasons,
           styles: data.styles,
+          moods: data.moods,
           clothingIds: selectedIds,
         })
       );

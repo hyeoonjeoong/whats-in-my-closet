@@ -4,6 +4,9 @@ export type Season = "spring" | "summer" | "fall" | "winter" | "between";
 // 스타일 타입
 export type Style = "casual" | "street" | "business" | "lovely" | "vintage" | "style_etc";
 
+// 무드 타입
+export type Mood = "clean" | "hip" | "overfit" | "layered" | "monotone" | "daily" | "date";
+
 // 최상위 카테고리 타입
 export type MainCategory =
   | "top"
@@ -81,6 +84,7 @@ export interface DbOutfit {
   name: string;
   seasons: Season[];
   styles?: Style[];
+  moods?: Mood[];
   created_at: string;
   updated_at: string;
 }
@@ -113,6 +117,7 @@ export interface Outfit {
   items: ClothingItem[];
   seasons: Season[];
   styles: Style[];
+  moods: Mood[];
   createdAt: string;
   updatedAt: string;
 }
@@ -168,6 +173,7 @@ export function toOutfit(db: DbOutfit, items: ClothingItem[]): Outfit {
     items,
     seasons: db.seasons,
     styles: db.styles || [],
+    moods: db.moods || [],
     createdAt: db.created_at,
     updatedAt: db.updated_at,
   };

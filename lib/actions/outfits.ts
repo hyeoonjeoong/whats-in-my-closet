@@ -1,7 +1,7 @@
 "use server";
 
 import { supabase } from "../supabase";
-import type { DbOutfit, DbClothes, Outfit, Season, Style, ClothingItem } from "@/types";
+import type { DbOutfit, DbClothes, Outfit, Season, Style, Mood, ClothingItem } from "@/types";
 import { toClothingItem, toOutfit } from "@/types";
 
 const OUTFIT_TABLE = "outfits";
@@ -38,6 +38,7 @@ interface CreateOutfitData {
   name: string;
   seasons: Season[];
   styles: Style[];
+  moods: Mood[];
   clothingIds: string[];
 }
 
@@ -64,6 +65,7 @@ export const createOutfitAction = async (
         name: data.name,
         seasons: data.seasons,
         styles: data.styles,
+        moods: data.moods,
       })
       .select()
       .single();
@@ -115,6 +117,7 @@ interface UpdateOutfitData {
   name?: string;
   seasons?: Season[];
   styles?: Style[];
+  moods?: Mood[];
   clothingIds?: string[];
 }
 
@@ -136,6 +139,7 @@ export const updateOutfitAction = async (
     if (data.name !== undefined) updateData.name = data.name;
     if (data.seasons !== undefined) updateData.seasons = data.seasons;
     if (data.styles !== undefined) updateData.styles = data.styles;
+    if (data.moods !== undefined) updateData.moods = data.moods;
 
     if (Object.keys(updateData).length > 0) {
       const { error: updateError } = await supabase
