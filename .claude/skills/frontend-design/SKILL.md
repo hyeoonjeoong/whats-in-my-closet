@@ -51,13 +51,14 @@ export const ClothingCard = ({ item, isSelected }: ClothingCardProps) => {
 ```
 components/
 ├── ui/         # Button, Modal, Card 등 범용 공통 컴포넌트
-├── closet/     # 옷장 관련 컴포넌트 (ClothingCard, FilterBar 등)
-├── outfit/     # 코디 관련 컴포넌트 (OutfitCard, OutfitBuilder 등)
-└── layout/     # Header, Navigation 등 레이아웃 컴포넌트
+├── closet/     # 옷장 관련 컴포넌트 (ClothesCard, HierarchicalFilterBar 등)
+├── outfit/     # 코디 관련 컴포넌트 (OutfitCard, OutfitCollage, OutfitSaveSection 등)
+├── lookbook/   # 룩북 관련 컴포넌트 (개발 예정)
+└── layout/     # Header, BottomNav 등 레이아웃 컴포넌트
 
 hooks/          # use로 시작하는 커스텀 훅
-types/          # 타입 정의 (ClothingItem, Outfit, Season, Category)
-lib/            # supabase.ts, constants.ts, utils.ts
+types/          # 타입 정의 (ClothingItem, Outfit, Season, Style, Mood 등)
+lib/            # supabase.ts, constants.ts, utils.ts, actions/
 ```
 
 ---
@@ -68,7 +69,7 @@ lib/            # supabase.ts, constants.ts, utils.ts
 
 ```tsx
 // components/closet/index.ts
-export { FilterBar } from './FilterBar'
+export { HierarchicalFilterBar } from './HierarchicalFilterBar'
 export { ClothesCard } from './ClothesCard'
 export { ClothesList } from './ClothesList'
 ```
@@ -146,16 +147,22 @@ import { Plus, X } from 'lucide-react'
 ## 도메인 타입
 
 ```tsx
-import type { ClothingItem, Outfit, Season, Category } from '@/types'
+import type { ClothingItem, Outfit, Season, Style, Mood, MainCategory, SubCategory } from '@/types'
 ```
 
-- `Season`: `"spring"` | `"summer"` | `"fall"` | `"winter"`
-- `Category`: `"top"` | `"bottom"` | `"outer"` | `"accessory"` | `"shoes"` | `"bag"`
+- `Season`: `"spring"` | `"summer"` | `"fall"` | `"winter"` | `"between"`
+- `MainCategory`: `"top"` | `"bottom"` | `"outer"` | `"accessory"` | `"shoes"` | `"bag"`
+- `SubCategory`: `"tshirt"` | `"shirt"` | `"denim"` | ... (각 MainCategory의 하위 카테고리)
+- `Style`: `"casual"` | `"street"` | `"business"` | `"lovely"` | `"vintage"` | `"style_etc"`
+- `Mood`: `"clean"` | `"hip"` | `"overfit"` | `"layered"` | `"monotone"` | `"daily"` | `"date"`
 
 한글 레이블이 필요할 때:
 
 ```tsx
-import { SEASONS, CATEGORIES } from '@/lib/constants'
+import { SEASONS, MAIN_CATEGORIES, CATEGORY_HIERARCHY, STYLES, MOODS } from '@/lib/constants'
 // SEASONS = [{ value: "spring", label: "봄" }, ...]
-// CATEGORIES = [{ value: "top", label: "상의" }, ...]
+// MAIN_CATEGORIES = [{ value: "top", label: "상의" }, ...]
+// CATEGORY_HIERARCHY = { top: [{ value: "tshirt", label: "티셔츠" }, ...], ... }
+// STYLES = [{ value: "casual", label: "캐주얼" }, ...]
+// MOODS = [{ value: "clean", label: "깔끔한" }, ...]
 ```

@@ -2,15 +2,16 @@
 
 import { useState } from "react";
 import { Input, Button, PasswordModal, HierarchicalSeasonSelect } from "@/components/ui";
-import { STYLES } from "@/lib/constants";
-import type { Season, Style } from "@/types";
+import { STYLES, MOODS } from "@/lib/constants";
+import type { Season, Style, Mood } from "@/types";
 
 interface OutfitSaveSectionProps {
   defaultName?: string;
   placeholderName?: string;
   defaultSeasons?: Season[];
   defaultStyles?: Style[];
-  onSave: (data: { name: string; seasons: Season[]; styles: Style[]; password: string }) => void;
+  defaultMoods?: Mood[];
+  onSave: (data: { name: string; seasons: Season[]; styles: Style[]; moods: Mood[]; password: string }) => void;
   isLoading?: boolean;
   hasSelection: boolean;
   submitLabel?: string;
@@ -21,6 +22,7 @@ export const OutfitSaveSection = ({
   placeholderName = "",
   defaultSeasons = [],
   defaultStyles = [],
+  defaultMoods = [],
   onSave,
   isLoading = false,
   hasSelection,
@@ -29,6 +31,7 @@ export const OutfitSaveSection = ({
   const [name, setName] = useState(defaultName);
   const [seasons, setSeasons] = useState<Season[]>(defaultSeasons);
   const [styles, setStyles] = useState<Style[]>(defaultStyles);
+  const [moods, setMoods] = useState<Mood[]>(defaultMoods);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   const handleStyleToggle = (style: Style) => {
@@ -39,6 +42,14 @@ export const OutfitSaveSection = ({
     }
   };
 
+  const handleMoodToggle = (mood: Mood) => {
+    if (moods.includes(mood)) {
+      setMoods(moods.filter((m) => m !== mood));
+    } else {
+      setMoods([...moods, mood]);
+    }
+  };
+
   const handleSubmit = () => {
     if (!hasSelection) return;
     setIsPasswordModalOpen(true);
@@ -46,7 +57,7 @@ export const OutfitSaveSection = ({
 
   const handlePasswordConfirm = async (password: string) => {
     const finalName = name.trim() || placeholderName || "코디";
-    onSave({ name: finalName, seasons, styles, password });
+    onSave({ name: finalName, seasons, styles, moods, password });
     setIsPasswordModalOpen(false);
   };
 
@@ -79,6 +90,27 @@ export const OutfitSaveSection = ({
               size="sm"
               selected={styles.includes(value)}
               onClick={() => handleStyleToggle(value)}
+              disabled={isLoading}
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-primary">
+          무드
+        </label>
+        <div className="flex flex-wrap gap-1.5">
+          {MOODS.map(({ value, label }) => (
+            <Button
+              key={value}
+              type="button"
+              variant="chip"
+              size="sm"
+              selected={moods.includes(value)}
+              onClick={() => handleMoodToggle(value)}
               disabled={isLoading}
             >
               {label}

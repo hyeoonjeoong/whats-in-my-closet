@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
+import { Boogaloo } from "next/font/google";
 import { Providers } from "@/components/Providers";
 import "./globals.css";
+
+const boogaloo = Boogaloo({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-boogaloo",
+});
 
 export const metadata: Metadata = {
   title: "내 옷장 | What's in My Closet",
@@ -13,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className="h-full antialiased">
+    <html lang="ko" className={`h-full antialiased ${boogaloo.variable}`}>
       <head>
         <link
           rel="stylesheet"

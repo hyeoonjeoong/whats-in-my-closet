@@ -1,17 +1,14 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { RotateCcw, Sparkles } from "lucide-react";
+import { RotateCcw, Camera } from "lucide-react";
 import { Fab, Button, IconButton } from "@/components/ui";
-import { OutfitCard } from "@/components/outfit";
-import { useOutfits } from "@/hooks/useOutfits";
 import { SEASONS, STYLES, MOODS } from "@/lib/constants";
-import type { Season, Style, Mood, Outfit } from "@/types";
+import type { Season, Style, Mood } from "@/types";
 
-export default function OutfitsPage() {
+export default function LookbookPage() {
   const router = useRouter();
-  const { outfits, isLoading, error } = useOutfits();
 
   // 필터 상태
   const [selectedSeasons, setSelectedSeasons] = useState<Season[]>([]);
@@ -48,60 +45,7 @@ export default function OutfitsPage() {
     setSelectedMoods([]);
   };
 
-  // 필터링된 코디 목록
-  const filteredOutfits = useMemo(() => {
-    return outfits.filter((outfit: Outfit) => {
-      // 계절 필터
-      if (selectedSeasons.length > 0) {
-        const hasMatchingSeason = outfit.seasons.some((s) =>
-          selectedSeasons.includes(s)
-        );
-        if (!hasMatchingSeason) return false;
-      }
-
-      // 스타일 필터
-      if (selectedStyles.length > 0) {
-        const hasMatchingStyle = outfit.styles.some((s) =>
-          selectedStyles.includes(s)
-        );
-        if (!hasMatchingStyle) return false;
-      }
-
-      // 무드 필터
-      if (selectedMoods.length > 0) {
-        const hasMatchingMood = outfit.moods.some((m) =>
-          selectedMoods.includes(m)
-        );
-        if (!hasMatchingMood) return false;
-      }
-
-      return true;
-    });
-  }, [outfits, selectedSeasons, selectedStyles, selectedMoods]);
-
   const hasFilters = selectedSeasons.length > 0 || selectedStyles.length > 0 || selectedMoods.length > 0;
-
-  if (isLoading) {
-    return (
-      <>
-        <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        </div>
-        <Fab icon={Sparkles} label="코디 만들기" onClick={() => router.push("/outfit/new")} />
-      </>
-    );
-  }
-
-  if (error) {
-    return (
-      <>
-        <div className="text-center text-red-500 py-12">
-          <p>{error}</p>
-        </div>
-        <Fab icon={Sparkles} label="코디 만들기" onClick={() => router.push("/outfit/new")} />
-      </>
-    );
-  }
 
   return (
     <>
@@ -182,31 +126,14 @@ export default function OutfitsPage() {
           </div>
         </div>
 
-        {/* 코디 목록 */}
-        {filteredOutfits.length > 0 ? (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
-            {filteredOutfits.map((outfit: Outfit) => (
-              <OutfitCard
-                key={outfit.id}
-                outfit={outfit}
-                onClick={() => router.push(`/outfit/${outfit.id}`)}
-              />
-            ))}
-          </div>
-        ) : outfits.length > 0 ? (
-          <div className="text-center text-secondary-1 py-12">
-            <p>조건에 맞는 코디가 없습니다</p>
-            <p className="mt-2 text-sm">필터를 변경해보세요</p>
-          </div>
-        ) : (
-          <div className="text-center text-secondary-1 py-12">
-            <p>저장된 코디가 없습니다</p>
-            <p className="mt-2 text-sm">코디를 만들어보세요</p>
-          </div>
-        )}
+        {/* 룩북 목록 (빈 상태) */}
+        <div className="text-center text-secondary-1 py-12">
+          <p>등록된 룩북이 없습니다</p>
+          <p className="mt-2 text-sm">착용 사진을 올려보세요</p>
+        </div>
       </div>
 
-      <Fab icon={Sparkles} label="코디 만들기" onClick={() => router.push("/outfit/new")} />
+      <Fab icon={Camera} label="룩북 추가" onClick={() => router.push("/lookbook/new")} />
     </>
   );
 }

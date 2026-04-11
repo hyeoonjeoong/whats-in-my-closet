@@ -16,7 +16,7 @@ import { useFilter } from "@/hooks/useFilter";
 import { useOutfitBuilder } from "@/hooks/useOutfitBuilder";
 import { useOutfits } from "@/hooks/useOutfits";
 import { createOutfitAction } from "@/lib/actions/outfits";
-import type { Season, Style } from "@/types";
+import type { Season, Style, Mood } from "@/types";
 
 export default function NewOutfitPage() {
   const router = useRouter();
@@ -49,7 +49,7 @@ export default function NewOutfitPage() {
     setCurrentPage(1);
   };
 
-  const handleSave = async (data: { name: string; seasons: Season[]; styles: Style[]; password: string }) => {
+  const handleSave = async (data: { name: string; seasons: Season[]; styles: Style[]; moods: Mood[]; password: string }) => {
     if (!hasSelection) return;
 
     setIsSaving(true);
@@ -62,6 +62,7 @@ export default function NewOutfitPage() {
           name: data.name,
           seasons: data.seasons,
           styles: data.styles,
+          moods: data.moods,
           clothingIds: selectedIds,
         })
       );
@@ -70,7 +71,7 @@ export default function NewOutfitPage() {
 
       if (result.success) {
         showToast("코디가 저장되었습니다", "success");
-        router.push("/outfits");
+        router.replace("/outfits");
       } else {
         showToast(result.error || "코디 저장에 실패했습니다", "error");
       }

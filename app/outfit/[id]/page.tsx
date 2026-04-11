@@ -2,14 +2,14 @@
 
 import { useState, useMemo, use } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Trash2 } from "lucide-react";
+import { Shirt, Info, Pencil, Trash2 } from "lucide-react";
 import {
   OutfitHeader,
   OutfitCollage,
 } from "@/components/outfit";
 import { ClothesDetailModal } from "@/components/closet";
-import { Button, IconButton, PasswordModal, useToast } from "@/components/ui";
-import { SEASONS, STYLES, SUB_TO_MAIN_CATEGORY } from "@/lib/constants";
+import { Button, PasswordModal, useToast } from "@/components/ui";
+import { SEASONS, STYLES, MOODS, SUB_TO_MAIN_CATEGORY } from "@/lib/constants";
 import type { MainCategory } from "@/types";
 import { useOutfitDetail } from "@/hooks/useOutfits";
 import { deleteOutfitAction } from "@/lib/actions/outfits";
@@ -70,14 +70,6 @@ export default function OutfitDetailPage({ params }: OutfitDetailPageProps) {
 
     return result;
   }, [outfit]);
-
-  const seasonLabels = outfit?.seasons
-    .map((s) => SEASONS.find((season) => season.value === s)?.label ?? s)
-    .join(", ");
-
-  const styleLabels = outfit?.styles
-    .map((s) => STYLES.find((style) => style.value === s)?.label ?? s)
-    .join(", ");
 
   const handleItemClick = (item: ClothingItem) => {
     setSelectedItemId(item.id);
@@ -142,38 +134,101 @@ export default function OutfitDetailPage({ params }: OutfitDetailPageProps) {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <OutfitHeader
-        title="코디 상세"
-        rightElement={
-          <IconButton
-            onClick={() => router.push(`/outfit/${id}/edit`)}
-            variant="ghost"
-            size="sm"
-            aria-label="수정"
-          >
-            <Pencil size={20} />
-          </IconButton>
-        }
-      />
+      <OutfitHeader title="코디 상세" />
 
-      <main className="flex-1 space-y-6 p-4">
-        {/* 코디 정보 */}
-        <div className="rounded-xl bg-white p-4 shadow-sm">
-          <h2 className="text-lg font-semibold text-primary">{outfit.name}</h2>
-          <div className="mt-1 space-y-0.5 text-sm text-secondary-1">
-            {seasonLabels && <p>{seasonLabels}</p>}
-            {styleLabels && <p>{styleLabels}</p>}
+      <main className="flex-1 p-4 space-y-6">
+        {/* 상단 섹션: 코디 구성 */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2 text-primary">
+            <Shirt size={18} />
+            <h2 className="font-semibold">코디 구성</h2>
           </div>
+
+          {/* 콜라주 */}
+          <OutfitCollage
+            selection={selection}
+            onItemClick={handleItemClick}
+            editable={false}
+          />
+        </section>
+
+        {/* 구분선 */}
+        <div className="flex items-center gap-3">
+          <div className="h-px flex-1 bg-secondary-1/30" />
+          <span className="text-xs text-secondary-1">코디 정보</span>
+          <div className="h-px flex-1 bg-secondary-1/30" />
         </div>
 
-        {/* 콜라주 */}
-        <OutfitCollage
-          selection={selection}
-          onItemClick={handleItemClick}
-          editable={false}
-        />
+        {/* 하단 섹션: 코디 정보 */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2 text-primary">
+            <Info size={18} />
+            <h2 className="font-semibold">코디 정보</h2>
+          </div>
 
-        {/* 삭제 버튼 영역 */}
+          <div className="rounded-xl bg-white p-4 shadow-sm space-y-4">
+            <div>
+              <p className="text-xs text-secondary-1">코디 이름</p>
+              <p className="text-sm font-medium text-primary">{outfit.name}</p>
+            </div>
+            {outfit.seasons.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-xs text-secondary-1">계절</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {outfit.seasons.map((season) => (
+                    <Button
+                      key={season}
+                      variant="chip"
+                      size="sm"
+                      selected
+                      className="pointer-events-none"
+                    >
+                      {SEASONS.find((s) => s.value === season)?.label ?? season}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {outfit.styles.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-xs text-secondary-1">스타일</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {outfit.styles.map((style) => (
+                    <Button
+                      key={style}
+                      variant="chip"
+                      size="sm"
+                      selected
+                      className="pointer-events-none"
+                    >
+                      {STYLES.find((s) => s.value === style)?.label ?? style}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {outfit.moods.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-xs text-secondary-1">무드</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {outfit.moods.map((mood) => (
+                    <Button
+                      key={mood}
+                      variant="chip"
+                      size="sm"
+                      selected
+                      className="pointer-events-none"
+                    >
+                      {MOODS.find((m) => m.value === mood)?.label ?? mood}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* 버튼 영역 */}
         {showDeleteConfirm ? (
           <div className="space-y-3 rounded-xl bg-white p-4 shadow-sm">
             <p className="text-center text-sm text-danger">
@@ -197,14 +252,24 @@ export default function OutfitDetailPage({ params }: OutfitDetailPageProps) {
             </div>
           </div>
         ) : (
-          <Button
-            variant="danger"
-            onClick={handleDeleteClick}
-            className="w-full"
-          >
-            <Trash2 size={18} className="mr-2" />
-            코디 삭제
-          </Button>
+          <div className="flex gap-3">
+            <Button
+              variant="primary"
+              onClick={() => router.push(`/outfit/${id}/edit`)}
+              className="flex-1"
+            >
+              <Pencil size={18} className="mr-2" />
+              수정하기
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleDeleteClick}
+              className="flex-1"
+            >
+              <Trash2 size={18} className="mr-2" />
+              삭제하기
+            </Button>
+          </div>
         )}
       </main>
 

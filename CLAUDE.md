@@ -7,11 +7,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **내 옷장 (What's in My Closet)** - 개인 옷장 관리 및 코디 저장 웹 애플리케이션
 
 ### 핵심 기능
-- 옷 사진 업로드 + 구매 링크 첨부
-- 계절별 필터링 (봄, 여름, 가을, 겨울)
-- 카테고리별 필터링 (상의, 하의, 아우터, 악세사리, 신발, 가방)
-- 코디 조합 저장 및 관리
-- 메인 홈: 옷장 탭 + 코디 목록 탭
+- **옷장**: 옷 사진 업로드 + 구매 링크 첨부
+- **코디**: 옷장 아이템으로 코디 조합 저장 및 관리
+- **룩북**: 실제 착용 사진 업로드 + 착용 아이템 태그 (개발 예정)
+- 계절별 필터링 (봄, 여름, 가을, 겨울, 간절기)
+- 카테고리별 필터링 (상의, 하의, 아우터, 악세사리, 신발, 가방 + 하위 카테고리)
+- 스타일 필터링 (캐주얼, 스트릿, 비즈니스캐주얼, 러블리, 빈티지, 기타)
+- 무드 필터링 (깔끔한, 힙한, 오버핏, 레이어드, 모노톤, 데일리, 데이트룩)
+- 메인 홈: 옷장 탭 + 코디 탭 + 룩북 탭
 
 ### 기술 스택
 - **Frontend**: Next.js 16, React 19, TypeScript
@@ -39,28 +42,41 @@ app/                        # Next.js App Router
 │   ├── layout.tsx          # Header + BottomNav 공통
 │   ├── closet/
 │   │   └── page.tsx        # /closet - 옷장 탭
-│   └── outfits/
-│       └── page.tsx        # /outfits - 코디 탭
-└── outfit/
+│   ├── outfits/
+│   │   └── page.tsx        # /outfits - 코디 탭
+│   └── lookbook/
+│       └── page.tsx        # /lookbook - 룩북 탭
+├── outfit/
+│   ├── new/
+│   │   └── page.tsx        # /outfit/new - 코디 만들기 (풀스크린)
+│   └── [id]/
+│       ├── page.tsx        # /outfit/[id] - 코디 상세
+│       └── edit/
+│           └── page.tsx    # /outfit/[id]/edit - 코디 수정
+└── lookbook/
     └── new/
-        └── page.tsx        # /outfit/new - 코디 만들기 (풀스크린)
+        └── page.tsx        # /lookbook/new - 룩북 추가 (풀스크린)
 
 components/
 ├── ui/                # 공통 UI 컴포넌트 (Button, Modal, Card 등)
-├── closet/            # 옷장 관련 컴포넌트
-├── outfit/            # 코디 관련 컴포넌트
-└── layout/            # 레이아웃 컴포넌트 (Header, Navigation 등)
+├── closet/            # 옷장 관련 컴포넌트 (HierarchicalFilterBar 등)
+├── outfit/            # 코디 관련 컴포넌트 (OutfitCard, OutfitCollage 등)
+└── layout/            # 레이아웃 컴포넌트 (Header, BottomNav 등)
 
 lib/
 ├── supabase.ts        # Supabase 클라이언트
-├── constants.ts       # 상수 (계절, 카테고리 목록)
+├── constants.ts       # 상수 (계절, 카테고리, 스타일, 무드)
+├── actions/           # Server Actions (clothes.ts, outfits.ts)
 └── utils.ts           # 유틸리티 함수
 
 types/
-└── index.ts           # 타입 정의 (ClothingItem, Outfit, Season, Category)
+└── index.ts           # 타입 정의 (ClothingItem, Outfit, Season, Style, Mood 등)
 
 hooks/
-└── useFilter.ts       # 필터링 커스텀 훅
+├── useFilter.ts       # 옷장 필터링 커스텀 훅
+├── useClothes.ts      # 옷 데이터 훅
+├── useOutfits.ts      # 코디 데이터 훅
+└── useOutfitBuilder.ts # 코디 빌더 훅
 ```
 
 ### 라우팅 구조 (Route Group 패턴)

@@ -1,4 +1,4 @@
-import type { Season, MainCategory, SubCategory, Style } from "@/types";
+import type { Season, MainCategory, SubCategory, Style, Mood } from "@/types";
 
 // 개별 계절 상수
 export const SEASONS: { value: Season; label: string }[] = [
@@ -20,6 +20,17 @@ export const STYLES: { value: Style; label: string }[] = [
   { value: "lovely", label: "러블리" },
   { value: "vintage", label: "빈티지" },
   { value: "style_etc", label: "기타" },
+];
+
+// 무드 상수
+export const MOODS: { value: Mood; label: string }[] = [
+  { value: "clean", label: "깔끔한" },
+  { value: "hip", label: "힙한" },
+  { value: "overfit", label: "오버핏" },
+  { value: "layered", label: "레이어드" },
+  { value: "monotone", label: "모노톤" },
+  { value: "daily", label: "데일리" },
+  { value: "date", label: "데이트룩" },
 ];
 
 // 최상위 카테고리

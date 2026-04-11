@@ -38,3 +38,13 @@ CREATE INDEX IF NOT EXISTS idx_clothes_categories ON clothes USING GIN(categorie
 -- 기존 seasons 데이터 확인 쿼리 (필요시 실행)
 -- SELECT DISTINCT unnest(seasons) FROM clothes;
 -- SELECT DISTINCT unnest(seasons) FROM outfits;
+
+-- =============================================
+-- 코디 스타일 컬럼 추가
+-- =============================================
+
+-- outfits 테이블에 styles 컬럼 추가
+ALTER TABLE outfits ADD COLUMN IF NOT EXISTS styles TEXT[] DEFAULT '{}';
+
+-- outfits 테이블에 moods 컬럼 추가
+ALTER TABLE outfits ADD COLUMN IF NOT EXISTS moods TEXT[] DEFAULT '{}';
