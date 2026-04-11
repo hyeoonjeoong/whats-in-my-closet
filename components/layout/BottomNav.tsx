@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Shirt, Palette } from "lucide-react";
+import { Shirt, Palette, BookImage } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { href: "/closet", icon: Shirt, label: "옷장" },
   { href: "/outfits", icon: Palette, label: "코디" },
+  { href: "/lookbook", icon: BookImage, label: "룩북" },
 ] as const;
 
 export const BottomNav = () => {
