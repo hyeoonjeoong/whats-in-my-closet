@@ -51,7 +51,7 @@ app/(tabs)/새탭명/page.tsx
 app/새기능/page.tsx
 ```
 - 탭 레이아웃 없이 독립적인 페이지
-- 예: `/outfit/new`, `/settings` 등
+- 예: `/outfit/new`, `/outfit/[id]`, `/outfit/[id]/edit`, `/lookbook/new` 등
 
 ### 금지 사항
 - **조건부 렌더링으로 탭/페이지 분기 금지**
