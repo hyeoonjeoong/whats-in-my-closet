@@ -71,7 +71,7 @@ export default function NewOutfitPage() {
 
       if (result.success) {
         showToast("코디가 저장되었습니다", "success");
-        router.push("/outfits");
+        router.replace("/outfits");
       } else {
         showToast(result.error || "코디 저장에 실패했습니다", "error");
       }

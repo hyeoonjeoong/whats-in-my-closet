@@ -86,7 +86,7 @@ export default function EditOutfitPage({ params }: EditOutfitPageProps) {
 
       if (result.success) {
         showToast("코디가 수정되었습니다", "success");
-        router.push(`/outfit/${id}`);
+        router.replace(`/outfit/${id}`);
       } else {
         showToast(result.error || "코디 수정에 실패했습니다", "error");
       }
