@@ -71,41 +71,40 @@ export const HierarchicalFilterBar = ({
           const subCategories = CATEGORY_HIERARCHY[mainValue];
 
           return (
-            <div
-              key={mainValue}
-              className="overflow-x-auto scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0"
-            >
-              <div className="flex items-center gap-2 min-w-max md:flex-wrap md:min-w-0">
-                {/* 최상위 카테고리 버튼 - 전체선택 버튼 */}
-                <button
-                  type="button"
-                  onClick={() => onMainCategoryToggle(mainValue)}
-                  className={cn(
-                    "shrink-0 px-2.5 py-1 text-xs font-medium rounded-full cursor-pointer transition-all border",
-                    isFullySelected
-                      ? "bg-primary text-white border-primary"
-                      : isPartiallySelected
-                        ? "bg-primary/10 text-primary border-primary/50"
-                        : "bg-transparent text-secondary-1 border-secondary-1/50 hover:border-primary hover:text-primary"
-                  )}
-                >
-                  {mainLabel}
-                </button>
+            <div key={mainValue} className="flex items-center gap-2">
+              {/* 최상위 카테고리 버튼 - 고정 */}
+              <button
+                type="button"
+                onClick={() => onMainCategoryToggle(mainValue)}
+                className={cn(
+                  "shrink-0 px-2.5 py-1 text-xs font-medium rounded-full cursor-pointer transition-all border",
+                  isFullySelected
+                    ? "bg-primary text-white border-primary"
+                    : isPartiallySelected
+                      ? "bg-primary/10 text-primary border-primary/50"
+                      : "bg-transparent text-secondary-1 border-secondary-1/50 hover:border-primary hover:text-primary"
+                )}
+              >
+                {mainLabel}
+              </button>
 
-                <div className="h-4 w-px bg-secondary-1/30 shrink-0" />
+              <div className="h-4 w-px bg-secondary-1/30 shrink-0" />
 
-                {/* 하위 카테고리 버튼들 */}
-                {subCategories.map(({ value: subValue, label: subLabel }) => (
-                  <Button
-                    key={subValue}
-                    variant="chip"
-                    size="sm"
-                    selected={selectedCategories.includes(subValue)}
-                    onClick={() => onCategoryToggle(subValue)}
-                  >
-                    {subLabel}
-                  </Button>
-                ))}
+              {/* 하위 카테고리 버튼들 - 스크롤 영역 */}
+              <div className="overflow-x-auto scrollbar-hide flex-1 -mr-4 pr-4 md:mr-0 md:pr-0">
+                <div className="flex items-center gap-2 min-w-max md:flex-wrap md:min-w-0">
+                  {subCategories.map(({ value: subValue, label: subLabel }) => (
+                    <Button
+                      key={subValue}
+                      variant="chip"
+                      size="sm"
+                      selected={selectedCategories.includes(subValue)}
+                      onClick={() => onCategoryToggle(subValue)}
+                    >
+                      {subLabel}
+                    </Button>
+                  ))}
+                </div>
               </div>
             </div>
           );

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
-import { ExternalLink, ImagePlus, X, Star } from "lucide-react";
+import { ExternalLink, ImagePlus, X, Star, ZoomIn } from "lucide-react";
 import { useClothesDetail } from "@/hooks/useClothesDetail";
 import {
   Modal,
@@ -196,20 +196,44 @@ const ViewMode = ({
   onDeleteCancel,
 }: ViewModeProps) => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const hasImages = item.imageUrls.length > 0;
   const hasMultipleImages = item.imageUrls.length > 1;
+
+  // 아이템이 바뀌면 상태 리셋
+  useEffect(() => {
+    setSelectedImageIndex(0);
+    setIsFullscreen(false);
+  }, [item.id]);
+
+  const handleCloseFullscreen = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsFullscreen(false);
+  };
 
   return (
     <div className="space-y-5">
       {/* 대표 이미지 */}
-      <div className="relative aspect-square overflow-hidden rounded-xl bg-secondary-3">
+      <div
+        className="relative aspect-square overflow-hidden rounded-xl cursor-pointer group"
+        onClick={() => hasImages && setIsFullscreen(true)}
+      >
         {hasImages ? (
           <>
+            {/* 블러 배경 */}
+            <Image
+              src={item.imageUrls[selectedImageIndex]}
+              alt=""
+              fill
+              className="object-cover scale-110 blur-xl opacity-60"
+              aria-hidden="true"
+            />
+            {/* 실제 이미지 */}
             <Image
               src={item.imageUrls[selectedImageIndex]}
               alt={item.name}
               fill
-              className="object-cover"
+              className="object-contain relative"
             />
             {selectedImageIndex === 0 && (
               <div className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-primary/90 px-2 py-1 text-xs text-white">
@@ -217,13 +241,65 @@ const ViewMode = ({
                 <span>대표</span>
               </div>
             )}
+            {/* 확대 아이콘 */}
+            <div className="absolute right-2 bottom-2 flex items-center gap-1 rounded-full bg-black/60 px-2 py-1 text-xs text-white opacity-70 group-hover:opacity-100 transition-opacity">
+              <ZoomIn size={14} />
+              <span className="hidden sm:inline">확대</span>
+            </div>
           </>
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-secondary-1">
+          <div className="flex h-full w-full items-center justify-center text-secondary-1 bg-secondary-3">
             <span className="text-6xl">👕</span>
           </div>
         )}
       </div>
+
+      {/* 풀스크린 이미지 뷰어 */}
+      {isFullscreen && (
+        <div
+          className="fixed inset-0 z-modal bg-black/95 flex items-center justify-center"
+          onClick={handleCloseFullscreen}
+        >
+          {/* 닫기 버튼 */}
+          <button
+            type="button"
+            className="absolute right-4 top-6 z-10 p-3 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 transition-colors"
+            onClick={handleCloseFullscreen}
+            aria-label="닫기"
+          >
+            <X size={24} className="text-white" />
+          </button>
+          <Image
+            src={item.imageUrls[selectedImageIndex]}
+            alt={item.name}
+            fill
+            className="object-contain p-4 sm:p-8"
+            onClick={(e) => e.stopPropagation()}
+          />
+          {/* 이미지 인디케이터 */}
+          {hasMultipleImages && (
+            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10 flex gap-3">
+              {item.imageUrls.map((_, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedImageIndex(index);
+                  }}
+                  className={cn(
+                    "w-3 h-3 rounded-full transition-all",
+                    selectedImageIndex === index
+                      ? "bg-white scale-125"
+                      : "bg-white/50 hover:bg-white/80 active:bg-white"
+                  )}
+                  aria-label={`이미지 ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 서브 이미지 썸네일 */}
       {hasMultipleImages && (
