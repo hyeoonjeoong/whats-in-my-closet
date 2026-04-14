@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import { ExternalLink } from "lucide-react";
 import type { ClothingItem } from "@/types";
@@ -11,11 +12,8 @@ interface ClothesCardProps {
 }
 
 export const ClothesCard = ({ item, onClick }: ClothesCardProps) => {
-  // 카테고리 라벨 (다중 카테고리면 +N 표시)
-  const categoryLabel = item.categories.length > 0
-    ? getSubCategoryLabel(item.categories[0])
-    : "";
-  const categoryExtra = item.categories.length > 1 ? ` +${item.categories.length - 1}` : "";
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [visibleCount, setVisibleCount] = useState(item.categories.length);
 
   // 계절 라벨 (전체 선택 시 "계절무관")
   const isAllSeasons = ALL_SEASONS.every((s) => item.seasons.includes(s));
@@ -24,6 +22,52 @@ export const ClothesCard = ({ item, onClick }: ClothesCardProps) => {
     : item.seasons
         .map((s) => SEASONS.find((season) => season.value === s)?.label ?? s)
         .join(", ");
+
+  // 카테고리 라벨 배열
+  const categoryLabels = item.categories.map((c) => getSubCategoryLabel(c));
+
+  useEffect(() => {
+    const calculateVisibleCount = () => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const containerWidth = container.offsetWidth;
+      const badges = container.querySelectorAll<HTMLElement>("[data-badge]");
+      const moreIndicator = container.querySelector<HTMLElement>("[data-more]");
+
+      let totalWidth = 0;
+      let count = 0;
+      const gap = 4; // gap-1 = 4px
+      const moreWidth = moreIndicator?.offsetWidth ?? 24;
+
+      badges.forEach((badge, index) => {
+        const badgeWidth = badge.scrollWidth;
+        const nextWidth = totalWidth + badgeWidth + (count > 0 ? gap : 0);
+
+        // 마지막 뱃지가 아니면 +N 영역 고려
+        const isLast = index === badges.length - 1;
+        const reservedWidth = isLast ? 0 : moreWidth + gap;
+
+        if (nextWidth + reservedWidth <= containerWidth) {
+          totalWidth = nextWidth;
+          count++;
+        }
+      });
+
+      setVisibleCount(Math.max(1, count));
+    };
+
+    calculateVisibleCount();
+
+    const resizeObserver = new ResizeObserver(calculateVisibleCount);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => resizeObserver.disconnect();
+  }, [categoryLabels.length]);
+
+  const hiddenCount = categoryLabels.length - visibleCount;
 
   return (
     <div
@@ -56,9 +100,31 @@ export const ClothesCard = ({ item, onClick }: ClothesCardProps) => {
       {/* 정보 영역 */}
       <div className="p-3">
         <h3 className="font-medium text-primary truncate">{item.name}</h3>
-        <div className="mt-1 space-y-0.5 text-xs text-secondary-1">
-          <p className="truncate">{categoryLabel}{categoryExtra}</p>
-          <p className="truncate">{seasonLabel}</p>
+        <div className="mt-1.5 space-y-1">
+          {/* 카테고리 뱃지 */}
+          <div ref={containerRef} className="flex items-center gap-1 overflow-hidden">
+            {categoryLabels.map((label, index) => (
+              <span
+                key={label}
+                data-badge
+                className={`shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-xs text-primary ${
+                  index >= visibleCount ? "invisible absolute" : ""
+                }`}
+              >
+                {label}
+              </span>
+            ))}
+            {hiddenCount > 0 && (
+              <span
+                data-more
+                className="shrink-0 rounded-full bg-secondary-1/20 px-1.5 py-0.5 text-xs text-secondary-1"
+              >
+                +{hiddenCount}
+              </span>
+            )}
+          </div>
+          {/* 계절 */}
+          <p className="text-xs text-secondary-1 truncate">{seasonLabel}</p>
         </div>
       </div>
 
