@@ -122,3 +122,54 @@ const nextConfig: NextConfig = {
 3. 로컬 타입과 DB 스키마가 일치하는지 확인
 
 ---
+
+## 풀스크린 오버레이에서 버튼 클릭 안됨
+
+### 문제
+
+`fixed inset-0`인 풀스크린 오버레이 내부에 `Image fill`과 버튼을 함께 배치하면, Image가 버튼 위를 덮어서 클릭이 안됩니다.
+
+```tsx
+// ❌ 버튼 클릭 안됨
+<div className="fixed inset-0">
+  <button className="absolute right-4 top-4">닫기</button>
+  <Image fill className="object-contain" />
+</div>
+```
+
+### 해결 방법
+
+버튼에 `z-10`을 추가하여 Image 위에 표시되도록 합니다:
+
+```tsx
+// ✅ 버튼 클릭 가능
+<div className="fixed inset-0">
+  <button className="absolute right-4 top-4 z-10">닫기</button>
+  <Image fill className="object-contain" />
+</div>
+```
+
+---
+
+## 모달 내 상태가 리셋되지 않음
+
+### 문제
+
+모달을 닫았다가 다시 열면 내부 컴포넌트의 state가 이전 값을 유지합니다. (예: 선택된 이미지 인덱스, 풀스크린 상태 등)
+
+### 해결 방법
+
+아이템 ID가 바뀔 때 상태를 리셋하는 `useEffect` 추가:
+
+```tsx
+const [selectedIndex, setSelectedIndex] = useState(0);
+const [isFullscreen, setIsFullscreen] = useState(false);
+
+// 아이템이 바뀌면 상태 리셋
+useEffect(() => {
+  setSelectedIndex(0);
+  setIsFullscreen(false);
+}, [item.id]);
+```
+
+---
