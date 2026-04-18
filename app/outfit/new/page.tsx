@@ -25,6 +25,10 @@ export default function NewOutfitPage() {
   const {
     filters,
     toggleSeason,
+    toggleAllSeasons,
+    toggleBetweenSeasons,
+    isAllSeasonsSelected,
+    isBetweenSeasonsSelected,
     toggleCategory,
     toggleMainCategory,
     isMainCategoryFullySelected,
@@ -122,6 +126,10 @@ export default function NewOutfitPage() {
               selectedSeasons={filters.seasons}
               selectedCategories={filters.categories}
               onSeasonToggle={(s) => handleFilterChange(() => toggleSeason(s))}
+              onAllSeasonsToggle={() => handleFilterChange(toggleAllSeasons)}
+              onBetweenSeasonsToggle={() => handleFilterChange(toggleBetweenSeasons)}
+              isAllSeasonsSelected={isAllSeasonsSelected()}
+              isBetweenSeasonsSelected={isBetweenSeasonsSelected()}
               onCategoryToggle={(c) => handleFilterChange(() => toggleCategory(c))}
               onMainCategoryToggle={(m) => handleFilterChange(() => toggleMainCategory(m))}
               isMainCategoryFullySelected={isMainCategoryFullySelected}
