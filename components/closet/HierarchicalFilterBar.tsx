@@ -2,12 +2,7 @@
 
 import { RotateCcw } from "lucide-react";
 import { Button, IconButton } from "@/components/ui";
-import {
-  BASIC_SEASONS,
-  SHORTCUT_SEASONS,
-  MAIN_CATEGORIES,
-  CATEGORY_HIERARCHY,
-} from "@/lib/constants";
+import { SEASONS, MAIN_CATEGORIES, CATEGORY_HIERARCHY } from "@/lib/constants";
 import type { Season, MainCategory, SubCategory } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -16,9 +11,7 @@ interface HierarchicalFilterBarProps {
   selectedCategories: SubCategory[];
   onSeasonToggle: (season: Season) => void;
   onAllSeasonsToggle: () => void;
-  onBetweenSeasonsToggle: () => void;
   isAllSeasonsSelected: boolean;
-  isBetweenSeasonsSelected: boolean;
   onCategoryToggle: (category: SubCategory) => void;
   onMainCategoryToggle: (mainCategory: MainCategory) => void;
   isMainCategoryFullySelected: (mainCategory: MainCategory) => boolean;
@@ -31,9 +24,7 @@ export const HierarchicalFilterBar = ({
   selectedCategories,
   onSeasonToggle,
   onAllSeasonsToggle,
-  onBetweenSeasonsToggle,
   isAllSeasonsSelected,
-  isBetweenSeasonsSelected,
   onCategoryToggle,
   onMainCategoryToggle,
   isMainCategoryFullySelected,
@@ -41,14 +32,6 @@ export const HierarchicalFilterBar = ({
   onReset,
 }: HierarchicalFilterBarProps) => {
   const hasFilters = selectedSeasons.length > 0 || selectedCategories.length > 0;
-
-  const handleShortcutToggle = (shortcut: "all" | "between") => {
-    if (shortcut === "all") {
-      onAllSeasonsToggle();
-    } else {
-      onBetweenSeasonsToggle();
-    }
-  };
 
   return (
     <div className="space-y-3">
@@ -68,25 +51,22 @@ export const HierarchicalFilterBar = ({
         </div>
         <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
           <div className="flex items-center gap-2 min-w-max md:flex-wrap md:min-w-0">
-            {/* 바로가기 버튼 */}
-            {SHORTCUT_SEASONS.map(({ value, label }) => (
-              <Button
-                key={value}
-                variant="chip"
-                size="sm"
-                dashed
-                selected={value === "all" ? isAllSeasonsSelected : isBetweenSeasonsSelected}
-                onClick={() => handleShortcutToggle(value)}
-              >
-                {label}
-              </Button>
-            ))}
+            {/* 계절무관 바로가기 */}
+            <Button
+              variant="chip"
+              size="sm"
+              dashed
+              selected={isAllSeasonsSelected}
+              onClick={onAllSeasonsToggle}
+            >
+              계절무관
+            </Button>
 
             {/* 구분선 */}
             <div className="h-4 w-px bg-secondary-1/30" />
 
-            {/* 기본 계절 버튼 */}
-            {BASIC_SEASONS.map(({ value, label }) => (
+            {/* 개별 계절 버튼 */}
+            {SEASONS.map(({ value, label }) => (
               <Button
                 key={value}
                 variant="chip"

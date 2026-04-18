@@ -16,10 +16,12 @@ export const ClothesCard = ({ item, onClick }: ClothesCardProps) => {
   const [visibleCount, setVisibleCount] = useState(item.categories.length);
 
   // 계절 라벨 (전체 선택 시 "계절무관")
-  const isAllSeasons = ALL_SEASONS.every((s) => item.seasons.includes(s));
+  // "between" 값은 레거시 데이터이므로 제외
+  const validSeasons = item.seasons.filter((s) => ALL_SEASONS.includes(s));
+  const isAllSeasons = ALL_SEASONS.every((s) => validSeasons.includes(s));
   const seasonLabel = isAllSeasons
     ? "계절무관"
-    : item.seasons
+    : validSeasons
         .map((s) => SEASONS.find((season) => season.value === s)?.label ?? s)
         .join(", ");
 
@@ -98,16 +100,16 @@ export const ClothesCard = ({ item, onClick }: ClothesCardProps) => {
       </div>
 
       {/* 정보 영역 */}
-      <div className="p-3">
-        <h3 className="font-medium text-primary truncate">{item.name}</h3>
-        <div className="mt-1.5 space-y-1">
+      <div className="px-2 py-1.5">
+        <h3 className="text-xs font-medium text-primary truncate">{item.name}</h3>
+        <div className="mt-1 space-y-0.5">
           {/* 카테고리 뱃지 */}
-          <div ref={containerRef} className="flex items-center gap-1 overflow-hidden">
+          <div ref={containerRef} className="flex items-center gap-0.5 overflow-hidden">
             {categoryLabels.map((label, index) => (
               <span
                 key={label}
                 data-badge
-                className={`shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-xs text-primary ${
+                className={`shrink-0 rounded px-1.5 py-px text-[10px] text-primary/70 bg-primary/10 ${
                   index >= visibleCount ? "invisible absolute" : ""
                 }`}
               >
@@ -117,14 +119,14 @@ export const ClothesCard = ({ item, onClick }: ClothesCardProps) => {
             {hiddenCount > 0 && (
               <span
                 data-more
-                className="shrink-0 rounded-full bg-secondary-1/20 px-1.5 py-0.5 text-xs text-secondary-1"
+                className="shrink-0 rounded-full bg-secondary-1/20 px-1 py-px text-[10px] text-secondary-1"
               >
                 +{hiddenCount}
               </span>
             )}
           </div>
           {/* 계절 */}
-          <p className="text-xs text-secondary-1 truncate">{seasonLabel}</p>
+          <p className="text-[10px] text-secondary-1 truncate">{seasonLabel}</p>
         </div>
       </div>
 

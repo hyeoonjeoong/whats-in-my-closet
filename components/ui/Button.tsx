@@ -50,7 +50,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       ? selected
         ? "bg-primary text-white border border-primary"
         : dashed
-          ? "bg-transparent text-primary border border-dashed border-primary/50 hover:border-primary hover:bg-primary/5"
+          ? "bg-transparent text-secondary-1 border border-dashed border-secondary-1/50 hover:border-primary hover:text-primary"
           : "bg-secondary-3 text-primary hover:bg-secondary-2"
       : "";
 

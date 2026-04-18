@@ -1,5 +1,5 @@
 // 계절 타입 (실제 저장되는 값)
-export type Season = "spring" | "summer" | "fall" | "winter" | "between";
+export type Season = "spring" | "summer" | "fall" | "winter";
 
 // 스타일 타입
 export type Style = "casual" | "street" | "business" | "lovely" | "vintage" | "style_etc";

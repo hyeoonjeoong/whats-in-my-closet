@@ -21,9 +21,7 @@ export default function ClosetPage() {
     filters,
     toggleSeason,
     toggleAllSeasons,
-    toggleBetweenSeasons,
     isAllSeasonsSelected,
-    isBetweenSeasonsSelected,
     toggleCategory,
     toggleMainCategory,
     isMainCategoryFullySelected,
@@ -74,9 +72,7 @@ export default function ClosetPage() {
           selectedCategories={filters.categories}
           onSeasonToggle={toggleSeason}
           onAllSeasonsToggle={toggleAllSeasons}
-          onBetweenSeasonsToggle={toggleBetweenSeasons}
           isAllSeasonsSelected={isAllSeasonsSelected()}
-          isBetweenSeasonsSelected={isBetweenSeasonsSelected()}
           onCategoryToggle={toggleCategory}
           onMainCategoryToggle={toggleMainCategory}
           isMainCategoryFullySelected={isMainCategoryFullySelected}

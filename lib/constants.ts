@@ -1,36 +1,15 @@
 import type { Season, MainCategory, SubCategory, Style, Mood } from "@/types";
 
-// 기본 계절 (실제 계절)
-export const BASIC_SEASONS: { value: Season; label: string }[] = [
-  { value: "spring", label: "봄" },
-  { value: "summer", label: "여름" },
-  { value: "fall", label: "가을" },
-  { value: "winter", label: "겨울" },
-];
-
-// 바로가기 (조합)
-export const SHORTCUT_SEASONS: { value: "all" | "between"; label: string }[] = [
-  { value: "all", label: "계절무관" },
-  { value: "between", label: "간절기" },
-];
-
-// 개별 계절 상수 (기존 호환)
+// 계절 상수
 export const SEASONS: { value: Season; label: string }[] = [
   { value: "spring", label: "봄" },
   { value: "summer", label: "여름" },
   { value: "fall", label: "가을" },
   { value: "winter", label: "겨울" },
-  { value: "between", label: "간절기" },
 ];
 
 // 모든 계절 값 배열
 export const ALL_SEASONS: Season[] = SEASONS.map((s) => s.value);
-
-// 기본 계절 값 배열 (계절무관 = 모든 기본 계절)
-export const ALL_BASIC_SEASONS: Season[] = BASIC_SEASONS.map((s) => s.value);
-
-// 간절기 포함 계절 (가을, 겨울)
-export const BETWEEN_SEASONS: Season[] = ["fall", "winter"];
 
 // 스타일 상수
 export const STYLES: { value: Style; label: string }[] = [

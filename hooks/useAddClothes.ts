@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { createClothesAction } from "@/lib/actions/clothes";
+import { getSubCategoryLabel } from "@/lib/constants";
 import type { SubCategory, Season, ClothingItem } from "@/types";
 
 interface FormData {
@@ -83,9 +84,7 @@ export const useAddClothes = (): UseAddClothesReturn => {
       newErrors.images = "이미지를 최소 1장 선택해주세요";
     }
 
-    if (!formData.name.trim()) {
-      newErrors.name = "이름을 입력해주세요";
-    } else if (formData.name.length > 50) {
+    if (formData.name.length > 50) {
       newErrors.name = "이름은 50자 이하로 입력해주세요";
     }
 
@@ -118,6 +117,9 @@ export const useAddClothes = (): UseAddClothesReturn => {
     setErrors((prev) => ({ ...prev, password: undefined }));
 
     try {
+      // 이름이 비어있으면 첫 번째 카테고리명 사용
+      const name = formData.name.trim() || getSubCategoryLabel(formData.categories[0]);
+
       const submitFormData = new FormData();
       formData.images.forEach((image) => {
         submitFormData.append("images", image);
@@ -125,7 +127,7 @@ export const useAddClothes = (): UseAddClothesReturn => {
       submitFormData.append(
         "data",
         JSON.stringify({
-          name: formData.name.trim(),
+          name,
           categories: formData.categories,
           seasons: formData.seasons,
           purchaseLink: formData.purchaseLink.trim() || undefined,

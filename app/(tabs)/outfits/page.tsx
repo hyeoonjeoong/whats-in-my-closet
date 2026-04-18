@@ -6,7 +6,7 @@ import { RotateCcw, Sparkles } from "lucide-react";
 import { Fab, Button, IconButton } from "@/components/ui";
 import { OutfitCard } from "@/components/outfit";
 import { useOutfits } from "@/hooks/useOutfits";
-import { SEASONS, STYLES, MOODS } from "@/lib/constants";
+import { SEASONS, ALL_SEASONS, STYLES, MOODS } from "@/lib/constants";
 import type { Season, Style, Mood, Outfit } from "@/types";
 
 export default function OutfitsPage() {
@@ -25,6 +25,15 @@ export default function OutfitsPage() {
         : [...prev, season]
     );
   };
+
+  const toggleAllSeasons = () => {
+    setSelectedSeasons((prev) => {
+      const allSelected = ALL_SEASONS.every((s) => prev.includes(s));
+      return allSelected ? [] : [...ALL_SEASONS];
+    });
+  };
+
+  const isAllSeasonsSelected = ALL_SEASONS.every((s) => selectedSeasons.includes(s));
 
   const toggleStyle = (style: Style) => {
     setSelectedStyles((prev) =>
@@ -113,6 +122,21 @@ export default function OutfitsPage() {
             <span className="w-10 text-xs font-medium text-secondary-1 shrink-0">계절</span>
             <div className="overflow-x-auto scrollbar-hide flex-1">
               <div className="flex items-center gap-2 min-w-max">
+                {/* 계절무관 바로가기 */}
+                <Button
+                  variant="chip"
+                  size="sm"
+                  dashed
+                  selected={isAllSeasonsSelected}
+                  onClick={toggleAllSeasons}
+                >
+                  계절무관
+                </Button>
+
+                {/* 구분선 */}
+                <div className="h-4 w-px bg-secondary-1/30" />
+
+                {/* 개별 계절 버튼 */}
                 {SEASONS.map(({ value, label }) => (
                   <Button
                     key={value}
