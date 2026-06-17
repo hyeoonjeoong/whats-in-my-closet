@@ -1,20 +1,13 @@
 "use server";
 
-import { supabase } from "../supabase";
+import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { requireAuth } from "@/lib/auth/serverAuth";
 import type { DbOutfit, DbClothes, Outfit, Season, Style, Mood, ClothingItem } from "@/types";
 import { toClothingItem, toOutfit } from "@/types";
 
 const OUTFIT_TABLE = "outfits";
 const OUTFIT_ITEMS_TABLE = "outfit_items";
 const CLOTHES_TABLE = "clothes";
-
-const verifyPassword = (password: string): boolean => {
-  const adminPassword = process.env.ADMIN_PASSWORD;
-  if (!adminPassword) {
-    throw new Error("관리자 비밀번호가 설정되지 않았습니다");
-  }
-  return password === adminPassword;
-};
 
 const getFormValue = (formData: FormData, key: string): FormDataEntryValue | null => {
   const direct = formData.get(key);
@@ -46,10 +39,9 @@ export const createOutfitAction = async (
   formData: FormData
 ): Promise<ActionResult<Outfit>> => {
   try {
-    const password = getFormValue(formData, "password") as string;
-    if (!verifyPassword(password)) {
-      return { success: false, error: "비밀번호가 올바르지 않습니다" };
-    }
+    // 인증 확인
+    const user = await requireAuth();
+    const supabase = await createServerSupabaseClient();
 
     const dataJson = getFormValue(formData, "data") as string;
     const data: CreateOutfitData = JSON.parse(dataJson);
@@ -58,7 +50,7 @@ export const createOutfitAction = async (
       return { success: false, error: "옷을 최소 1개 선택해주세요" };
     }
 
-    // 코디 생성
+    // 코디 생성 (user_id 포함)
     const { data: outfitData, error: outfitError } = await supabase
       .from(OUTFIT_TABLE)
       .insert({
@@ -66,6 +58,7 @@ export const createOutfitAction = async (
         seasons: data.seasons,
         styles: data.styles,
         moods: data.moods,
+        user_id: user.id,
       })
       .select()
       .single();
@@ -125,12 +118,11 @@ export const updateOutfitAction = async (
   formData: FormData
 ): Promise<ActionResult<Outfit>> => {
   try {
-    const id = getFormValue(formData, "id") as string;
-    const password = getFormValue(formData, "password") as string;
-    if (!verifyPassword(password)) {
-      return { success: false, error: "비밀번호가 올바르지 않습니다" };
-    }
+    // 인증 확인
+    await requireAuth();
+    const supabase = await createServerSupabaseClient();
 
+    const id = getFormValue(formData, "id") as string;
     const dataJson = getFormValue(formData, "data") as string;
     const data: UpdateOutfitData = JSON.parse(dataJson);
 
@@ -225,11 +217,11 @@ export const deleteOutfitAction = async (
   formData: FormData
 ): Promise<ActionResult<void>> => {
   try {
+    // 인증 확인
+    await requireAuth();
+    const supabase = await createServerSupabaseClient();
+
     const id = getFormValue(formData, "id") as string;
-    const password = getFormValue(formData, "password") as string;
-    if (!verifyPassword(password)) {
-      return { success: false, error: "비밀번호가 올바르지 않습니다" };
-    }
 
     // 코디 삭제 (cascade로 outfit_items도 자동 삭제됨)
     const { error: deleteError } = await supabase

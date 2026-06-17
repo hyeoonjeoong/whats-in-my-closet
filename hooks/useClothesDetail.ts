@@ -22,7 +22,7 @@ interface FormErrors {
   category?: string;
   seasons?: string;
   purchaseLink?: string;
-  password?: string;
+  submit?: string;
 }
 
 interface UseClothesDetailReturn {
@@ -42,10 +42,9 @@ interface UseClothesDetailReturn {
   setCategories: (categories: SubCategory[]) => void;
   setSeasons: (seasons: Season[]) => void;
   setPurchaseLink: (link: string) => void;
-  submitEdit: (password: string) => Promise<ClothingItem>;
-  deleteItem: (password: string) => Promise<void>;
+  submitEdit: () => Promise<ClothingItem>;
+  deleteItem: () => Promise<void>;
   reset: () => void;
-  clearPasswordError: () => void;
 }
 
 const initialFormData: FormData = {
@@ -163,7 +162,7 @@ export const useClothesDetail = (): UseClothesDetailReturn => {
   }, [formData]);
 
   const submitEdit = useCallback(
-    async (password: string): Promise<ClothingItem> => {
+    async (): Promise<ClothingItem> => {
       if (!item) {
         throw new Error("아이템이 로드되지 않았습니다");
       }
@@ -182,7 +181,7 @@ export const useClothesDetail = (): UseClothesDetailReturn => {
       }
 
       setIsSubmitting(true);
-      setErrors((prev) => ({ ...prev, password: undefined }));
+      setErrors((prev) => ({ ...prev, submit: undefined }));
 
       try {
         const submitFormData = new FormData();
@@ -200,12 +199,11 @@ export const useClothesDetail = (): UseClothesDetailReturn => {
             existingImageUrls: formData.imageUrls,
           })
         );
-        submitFormData.append("password", password);
 
         const result = await updateClothesAction(submitFormData);
 
         if (!result.success) {
-          setErrors((prev) => ({ ...prev, password: result.error }));
+          setErrors((prev) => ({ ...prev, submit: result.error }));
           throw new Error(result.error);
         }
 
@@ -230,23 +228,22 @@ export const useClothesDetail = (): UseClothesDetailReturn => {
   );
 
   const deleteItem = useCallback(
-    async (password: string): Promise<void> => {
+    async (): Promise<void> => {
       if (!item) {
         throw new Error("아이템이 로드되지 않았습니다");
       }
 
       setIsDeleting(true);
-      setErrors((prev) => ({ ...prev, password: undefined }));
+      setErrors((prev) => ({ ...prev, submit: undefined }));
 
       try {
         const deleteFormData = new FormData();
         deleteFormData.append("id", item.id);
-        deleteFormData.append("password", password);
 
         const result = await deleteClothesAction(deleteFormData);
 
         if (!result.success) {
-          setErrors((prev) => ({ ...prev, password: result.error }));
+          setErrors((prev) => ({ ...prev, submit: result.error }));
           throw new Error(result.error);
         }
       } finally {
@@ -264,10 +261,6 @@ export const useClothesDetail = (): UseClothesDetailReturn => {
     setIsLoading(false);
     setIsSubmitting(false);
     setIsDeleting(false);
-  }, []);
-
-  const clearPasswordError = useCallback(() => {
-    setErrors((prev) => ({ ...prev, password: undefined }));
   }, []);
 
   return {
@@ -290,6 +283,5 @@ export const useClothesDetail = (): UseClothesDetailReturn => {
     submitEdit,
     deleteItem,
     reset,
-    clearPasswordError,
   };
 };

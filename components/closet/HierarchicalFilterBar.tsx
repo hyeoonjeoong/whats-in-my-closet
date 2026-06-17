@@ -10,6 +10,8 @@ interface HierarchicalFilterBarProps {
   selectedSeasons: Season[];
   selectedCategories: SubCategory[];
   onSeasonToggle: (season: Season) => void;
+  onAllSeasonsToggle: () => void;
+  isAllSeasonsSelected: boolean;
   onCategoryToggle: (category: SubCategory) => void;
   onMainCategoryToggle: (mainCategory: MainCategory) => void;
   isMainCategoryFullySelected: (mainCategory: MainCategory) => boolean;
@@ -21,6 +23,8 @@ export const HierarchicalFilterBar = ({
   selectedSeasons,
   selectedCategories,
   onSeasonToggle,
+  onAllSeasonsToggle,
+  isAllSeasonsSelected,
   onCategoryToggle,
   onMainCategoryToggle,
   isMainCategoryFullySelected,
@@ -47,6 +51,21 @@ export const HierarchicalFilterBar = ({
         </div>
         <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
           <div className="flex items-center gap-2 min-w-max md:flex-wrap md:min-w-0">
+            {/* 계절무관 바로가기 */}
+            <Button
+              variant="chip"
+              size="sm"
+              dashed
+              selected={isAllSeasonsSelected}
+              onClick={onAllSeasonsToggle}
+            >
+              계절무관
+            </Button>
+
+            {/* 구분선 */}
+            <div className="h-4 w-px bg-secondary-1/30" />
+
+            {/* 개별 계절 버튼 */}
             {SEASONS.map(({ value, label }) => (
               <Button
                 key={value}

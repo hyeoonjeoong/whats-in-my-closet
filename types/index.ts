@@ -1,5 +1,5 @@
 // 계절 타입 (실제 저장되는 값)
-export type Season = "spring" | "summer" | "fall" | "winter" | "between";
+export type Season = "spring" | "summer" | "fall" | "winter";
 
 // 스타일 타입
 export type Style = "casual" | "street" | "business" | "lovely" | "vintage" | "style_etc";
@@ -75,6 +75,7 @@ export interface DbClothes {
   category?: MainCategory;
   seasons: Season[];
   purchase_link: string | null;
+  user_id: string | null; // null이면 데모 데이터
   created_at: string;
   updated_at: string;
 }
@@ -85,6 +86,7 @@ export interface DbOutfit {
   seasons: Season[];
   styles?: Style[];
   moods?: Mood[];
+  user_id: string | null; // null이면 데모 데이터
   created_at: string;
   updated_at: string;
 }
@@ -107,6 +109,7 @@ export interface ClothingItem {
   categories: Category[];
   seasons: Season[];
   purchaseLink?: string;
+  userId: string | null; // null이면 데모 데이터
   createdAt: string;
   updatedAt: string;
 }
@@ -118,6 +121,7 @@ export interface Outfit {
   seasons: Season[];
   styles: Style[];
   moods: Mood[];
+  userId: string | null; // null이면 데모 데이터
   createdAt: string;
   updatedAt: string;
 }
@@ -161,6 +165,7 @@ export function toClothingItem(db: DbClothes): ClothingItem {
     categories,
     seasons: db.seasons,
     purchaseLink: db.purchase_link ?? undefined,
+    userId: db.user_id,
     createdAt: db.created_at,
     updatedAt: db.updated_at,
   };
@@ -174,6 +179,7 @@ export function toOutfit(db: DbOutfit, items: ClothingItem[]): Outfit {
     seasons: db.seasons,
     styles: db.styles || [],
     moods: db.moods || [],
+    userId: db.user_id,
     createdAt: db.created_at,
     updatedAt: db.updated_at,
   };

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/lib/auth/AuthContext";
 import { useAddClothes } from "@/hooks/useAddClothes";
 import {
   Modal,
@@ -9,7 +10,7 @@ import {
   MultiImageUpload,
   HierarchicalSeasonSelect,
   HierarchicalCategorySelect,
-  PasswordModal,
+  LoginRequiredModal,
 } from "@/components/ui";
 import type { ClothingItem } from "@/types";
 
@@ -24,7 +25,8 @@ export const AddClothesModal = ({
   onClose,
   onSuccess,
 }: AddClothesModalProps) => {
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const { user } = useAuth();
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const {
     formData,
     errors,
@@ -37,27 +39,27 @@ export const AddClothesModal = ({
     validate,
     submit,
     reset,
-    clearPasswordError,
   } = useAddClothes();
 
   const handleClose = () => {
     reset();
-    setShowPasswordModal(false);
+    setShowLoginModal(false);
     onClose();
   };
 
-  const handleSubmitClick = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validate()) {
-      setShowPasswordModal(true);
-    }
-  };
+    if (!validate()) return;
 
-  const handlePasswordConfirm = async (password: string) => {
+    // 비로그인 시 로그인 유도 모달
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+
     try {
-      const newItem = await submit(password);
+      const newItem = await submit();
       reset();
-      setShowPasswordModal(false);
       onSuccess(newItem);
       onClose();
     } catch {
@@ -65,15 +67,17 @@ export const AddClothesModal = ({
     }
   };
 
-  const handlePasswordClose = () => {
-    setShowPasswordModal(false);
-    clearPasswordError();
-  };
-
   return (
     <>
       <Modal isOpen={isOpen} onClose={handleClose} title="옷 추가">
-        <form onSubmit={handleSubmitClick} className="space-y-5">
+        {/* 비로그인 안내 배너 */}
+        {!user && (
+          <div className="mb-4 rounded-lg bg-secondary-2 px-3 py-2 text-center text-sm text-primary">
+            👀 로그인하면 내 옷장에 저장돼요
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-5">
           <MultiImageUpload
             value={formData.images}
             onChange={setImages}
@@ -111,28 +115,32 @@ export const AddClothesModal = ({
             error={errors.purchaseLink}
           />
 
+          {errors.submit && (
+            <p className="text-sm text-danger">{errors.submit}</p>
+          )}
+
           <div className="flex gap-3 pt-2">
             <Button
               type="button"
               variant="secondary"
               onClick={handleClose}
               className="flex-1"
+              disabled={isSubmitting}
             >
               취소
             </Button>
-            <Button type="submit" className="flex-1">
-              추가
+            <Button type="submit" className="flex-1" disabled={isSubmitting}>
+              {isSubmitting ? "추가 중..." : "추가"}
             </Button>
           </div>
         </form>
       </Modal>
 
-      <PasswordModal
-        isOpen={showPasswordModal}
-        onClose={handlePasswordClose}
-        onConfirm={handlePasswordConfirm}
-        isLoading={isSubmitting}
-        error={errors.password}
+      <LoginRequiredModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        title="로그인이 필요해요"
+        description="옷을 추가하려면 로그인해주세요"
       />
     </>
   );

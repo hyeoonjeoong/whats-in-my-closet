@@ -20,18 +20,22 @@ export function useFilter() {
     }));
   }, []);
 
-  // 전체 계절 토글 (무관 클릭 시)
+  // 계절무관 토글 (봄, 여름, 가을, 겨울 전체)
   const toggleAllSeasons = useCallback(() => {
     setFilters((prev) => {
       const allSelected = ALL_SEASONS.every((s) => prev.seasons.includes(s));
-      return {
-        ...prev,
-        seasons: allSelected ? [] : [...ALL_SEASONS],
-      };
+
+      if (allSelected) {
+        // 계절무관 해제 → 모든 계절 필터 해제
+        return { ...prev, seasons: [] };
+      } else {
+        // 계절무관 선택 → 모든 계절 추가
+        return { ...prev, seasons: [...ALL_SEASONS] };
+      }
     });
   }, []);
 
-  // 전체 계절이 선택되었는지 확인
+  // 계절무관 상태 (봄, 여름, 가을, 겨울 모두 선택됨)
   const isAllSeasonsSelected = useCallback((): boolean => {
     return ALL_SEASONS.every((s) => filters.seasons.includes(s));
   }, [filters.seasons]);

@@ -12,6 +12,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   size?: ButtonSize;
   isLoading?: boolean;
   selected?: boolean;
+  dashed?: boolean;
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
@@ -37,6 +38,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       size = "md",
       isLoading = false,
       selected = false,
+      dashed = false,
       disabled,
       children,
       ...props
@@ -46,8 +48,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const isChip = variant === "chip";
     const chipStyle = isChip
       ? selected
-        ? "bg-primary text-white"
-        : "bg-secondary-3 text-primary hover:bg-secondary-2"
+        ? "bg-primary text-white border border-primary"
+        : dashed
+          ? "bg-transparent text-secondary-1 border border-dashed border-secondary-1/50 hover:border-primary hover:text-primary"
+          : "bg-secondary-3 text-primary hover:bg-secondary-2"
       : "";
 
     return (

@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { createClothesAction } from "@/lib/actions/clothes";
+import { getSubCategoryLabel } from "@/lib/constants";
 import type { SubCategory, Season, ClothingItem } from "@/types";
 
 interface FormData {
@@ -18,7 +19,7 @@ interface FormErrors {
   category?: string;
   seasons?: string;
   purchaseLink?: string;
-  password?: string;
+  submit?: string;
 }
 
 interface UseAddClothesReturn {
@@ -31,9 +32,8 @@ interface UseAddClothesReturn {
   setSeasons: (seasons: Season[]) => void;
   setPurchaseLink: (link: string) => void;
   validate: () => boolean;
-  submit: (password: string) => Promise<ClothingItem>;
+  submit: () => Promise<ClothingItem>;
   reset: () => void;
-  clearPasswordError: () => void;
 }
 
 const initialFormData: FormData = {
@@ -83,9 +83,7 @@ export const useAddClothes = (): UseAddClothesReturn => {
       newErrors.images = "이미지를 최소 1장 선택해주세요";
     }
 
-    if (!formData.name.trim()) {
-      newErrors.name = "이름을 입력해주세요";
-    } else if (formData.name.length > 50) {
+    if (formData.name.length > 50) {
       newErrors.name = "이름은 50자 이하로 입력해주세요";
     }
 
@@ -105,7 +103,7 @@ export const useAddClothes = (): UseAddClothesReturn => {
     return Object.keys(newErrors).length === 0;
   }, [formData]);
 
-  const submit = useCallback(async (password: string): Promise<ClothingItem> => {
+  const submit = useCallback(async (): Promise<ClothingItem> => {
     if (!validate()) {
       throw new Error("입력값을 확인해주세요");
     }
@@ -115,9 +113,12 @@ export const useAddClothes = (): UseAddClothesReturn => {
     }
 
     setIsSubmitting(true);
-    setErrors((prev) => ({ ...prev, password: undefined }));
+    setErrors((prev) => ({ ...prev, submit: undefined }));
 
     try {
+      // 이름이 비어있으면 첫 번째 카테고리명 사용
+      const name = formData.name.trim() || getSubCategoryLabel(formData.categories[0]);
+
       const submitFormData = new FormData();
       formData.images.forEach((image) => {
         submitFormData.append("images", image);
@@ -125,18 +126,17 @@ export const useAddClothes = (): UseAddClothesReturn => {
       submitFormData.append(
         "data",
         JSON.stringify({
-          name: formData.name.trim(),
+          name,
           categories: formData.categories,
           seasons: formData.seasons,
           purchaseLink: formData.purchaseLink.trim() || undefined,
         })
       );
-      submitFormData.append("password", password);
 
       const result = await createClothesAction(submitFormData);
 
       if (!result.success) {
-        setErrors((prev) => ({ ...prev, password: result.error }));
+        setErrors((prev) => ({ ...prev, submit: result.error }));
         throw new Error(result.error);
       }
 
@@ -151,10 +151,6 @@ export const useAddClothes = (): UseAddClothesReturn => {
     setErrors({});
   }, []);
 
-  const clearPasswordError = useCallback(() => {
-    setErrors((prev) => ({ ...prev, password: undefined }));
-  }, []);
-
   return {
     formData,
     errors,
@@ -167,6 +163,5 @@ export const useAddClothes = (): UseAddClothesReturn => {
     validate,
     submit,
     reset,
-    clearPasswordError,
   };
 };

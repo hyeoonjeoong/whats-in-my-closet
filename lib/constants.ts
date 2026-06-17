@@ -1,12 +1,11 @@
 import type { Season, MainCategory, SubCategory, Style, Mood } from "@/types";
 
-// 개별 계절 상수
+// 계절 상수
 export const SEASONS: { value: Season; label: string }[] = [
   { value: "spring", label: "봄" },
   { value: "summer", label: "여름" },
   { value: "fall", label: "가을" },
   { value: "winter", label: "겨울" },
-  { value: "between", label: "간절기" },
 ];
 
 // 모든 계절 값 배열

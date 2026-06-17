@@ -1,19 +1,12 @@
 "use server";
 
-import { supabase } from "../supabase";
+import { createServerSupabaseClient } from "@/lib/supabase-server";
+import { requireAuth } from "@/lib/auth/serverAuth";
 import type { DbClothes, ClothingItem, SubCategory, Season } from "@/types";
 import { toClothingItem } from "@/types";
 
 const TABLE_NAME = "clothes";
 const BUCKET_NAME = "clothes-images";
-
-const verifyPassword = (password: string): boolean => {
-  const adminPassword = process.env.ADMIN_PASSWORD;
-  if (!adminPassword) {
-    throw new Error("관리자 비밀번호가 설정되지 않았습니다");
-  }
-  return password === adminPassword;
-};
 
 // Next.js 서버 액션에서 FormData 키의 prefix를 제거하는 헬퍼
 const getFormValue = (formData: FormData, key: string): FormDataEntryValue | null => {
@@ -62,10 +55,9 @@ export const createClothesAction = async (
   formData: FormData
 ): Promise<ActionResult<ClothingItem>> => {
   try {
-    const password = getFormValue(formData, "password") as string;
-    if (!verifyPassword(password)) {
-      return { success: false, error: "비밀번호가 올바르지 않습니다" };
-    }
+    // 인증 확인
+    const user = await requireAuth();
+    const supabase = await createServerSupabaseClient();
 
     const images = getFormValues(formData, "images") as File[];
     const dataJson = getFormValue(formData, "data") as string;
@@ -111,7 +103,7 @@ export const createClothesAction = async (
       imageUrls.push(publicUrl);
     }
 
-    // DB 저장
+    // DB 저장 (user_id 포함)
     const { data: dbData, error: dbError } = await supabase
       .from(TABLE_NAME)
       .insert({
@@ -120,6 +112,7 @@ export const createClothesAction = async (
         categories: data.categories,
         seasons: data.seasons,
         purchase_link: data.purchaseLink || null,
+        user_id: user.id,
       })
       .select()
       .single();
@@ -151,12 +144,11 @@ export const updateClothesAction = async (
   formData: FormData
 ): Promise<ActionResult<ClothingItem>> => {
   try {
-    const id = getFormValue(formData, "id") as string;
-    const password = getFormValue(formData, "password") as string;
-    if (!verifyPassword(password)) {
-      return { success: false, error: "비밀번호가 올바르지 않습니다" };
-    }
+    // 인증 확인
+    await requireAuth();
+    const supabase = await createServerSupabaseClient();
 
+    const id = getFormValue(formData, "id") as string;
     const newImages = getFormValues(formData, "images") as File[];
     const dataJson = getFormValue(formData, "data") as string;
     const data: UpdateClothesData = JSON.parse(dataJson);
@@ -278,11 +270,11 @@ export const deleteClothesAction = async (
   formData: FormData
 ): Promise<ActionResult<void>> => {
   try {
+    // 인증 확인
+    await requireAuth();
+    const supabase = await createServerSupabaseClient();
+
     const id = getFormValue(formData, "id") as string;
-    const password = getFormValue(formData, "password") as string;
-    if (!verifyPassword(password)) {
-      return { success: false, error: "비밀번호가 올바르지 않습니다" };
-    }
 
     // 기존 이미지 경로들 가져오기
     const { data: existing } = await supabase
