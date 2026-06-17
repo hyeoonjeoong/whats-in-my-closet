@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { ExternalLink, ImagePlus, X, Star, ZoomIn } from "lucide-react";
+import { useAuth } from "@/lib/auth/AuthContext";
 import { useClothesDetail } from "@/hooks/useClothesDetail";
 import {
   Modal,
@@ -11,7 +12,8 @@ import {
   HierarchicalSeasonSelect,
   HierarchicalCategorySelect,
   IconButton,
-  PasswordModal,
+  LoginRequiredModal,
+  useToast,
 } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import type { ClothingItem, SubCategory, Season } from "@/types";
@@ -31,9 +33,10 @@ export const ClothesDetailModal = ({
   onUpdate,
   onDelete,
 }: ClothesDetailModalProps) => {
+  const { user } = useAuth();
+  const { showToast } = useToast();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [passwordAction, setPasswordAction] = useState<"edit" | "delete">("edit");
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const {
     item,
     formData,
@@ -54,8 +57,10 @@ export const ClothesDetailModal = ({
     submitEdit,
     deleteItem,
     reset,
-    clearPasswordError,
   } = useClothesDetail();
+
+  // 데모 데이터 여부 (user_id가 null이면 데모)
+  const isDemoData = item?.userId === null;
 
   useEffect(() => {
     if (isOpen && itemId) {
@@ -66,46 +71,55 @@ export const ClothesDetailModal = ({
   const handleClose = () => {
     reset();
     setShowDeleteConfirm(false);
-    setShowPasswordModal(false);
+    setShowLoginModal(false);
     onClose();
   };
 
-  const handleSubmitClick = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPasswordAction("edit");
-    setShowPasswordModal(true);
+  // 수정 버튼 클릭 시 권한 체크
+  const handleEditClick = () => {
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+    if (isDemoData) {
+      showToast("데모 데이터는 수정할 수 없어요", "error");
+      return;
+    }
+    startEditing();
   };
 
+  // 삭제 버튼 클릭 시 권한 체크
   const handleDeleteClick = () => {
-    setPasswordAction("delete");
-    setShowPasswordModal(true);
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+    if (isDemoData) {
+      showToast("데모 데이터는 삭제할 수 없어요", "error");
+      return;
+    }
+    setShowDeleteConfirm(true);
   };
 
-  const handlePasswordConfirm = async (password: string) => {
-    if (passwordAction === "edit") {
-      try {
-        const updatedItem = await submitEdit(password);
-        setShowPasswordModal(false);
-        onUpdate(updatedItem);
-      } catch {
-        // 에러는 useClothesDetail에서 처리됨
-      }
-    } else {
-      if (!item) return;
-      try {
-        await deleteItem(password);
-        setShowPasswordModal(false);
-        onDelete(item.id);
-        handleClose();
-      } catch {
-        // 에러 처리
-      }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const updatedItem = await submitEdit();
+      onUpdate(updatedItem);
+    } catch {
+      // 에러는 useClothesDetail에서 처리됨
     }
   };
 
-  const handlePasswordClose = () => {
-    setShowPasswordModal(false);
-    clearPasswordError();
+  const handleDelete = async () => {
+    if (!item) return;
+    try {
+      await deleteItem();
+      onDelete(item.id);
+      handleClose();
+    } catch {
+      // 에러는 useClothesDetail에서 처리됨
+    }
   };
 
   const handleCancelEdit = () => {
@@ -140,7 +154,8 @@ export const ClothesDetailModal = ({
           <EditMode
             formData={formData}
             errors={errors}
-            onSubmit={handleSubmitClick}
+            isSubmitting={isSubmitting}
+            onSubmit={handleSubmit}
             onCancel={handleCancelEdit}
             setImageUrls={setImageUrls}
             setNewImages={setNewImages}
@@ -153,26 +168,20 @@ export const ClothesDetailModal = ({
           <ViewMode
             item={item}
             showDeleteConfirm={showDeleteConfirm}
-            onEdit={startEditing}
-            onDeleteClick={() => setShowDeleteConfirm(true)}
-            onDeleteConfirm={handleDeleteClick}
+            isDeleting={isDeleting}
+            onEdit={handleEditClick}
+            onDeleteClick={handleDeleteClick}
+            onDeleteConfirm={handleDelete}
             onDeleteCancel={() => setShowDeleteConfirm(false)}
           />
         )}
       </Modal>
 
-      <PasswordModal
-        isOpen={showPasswordModal}
-        onClose={handlePasswordClose}
-        onConfirm={handlePasswordConfirm}
-        title={passwordAction === "edit" ? "수정 확인" : "삭제 확인"}
-        description={
-          passwordAction === "edit"
-            ? "수정하려면 관리자 비밀번호를 입력해주세요"
-            : "삭제하려면 관리자 비밀번호를 입력해주세요"
-        }
-        isLoading={passwordAction === "edit" ? isSubmitting : isDeleting}
-        error={errors.password}
+      <LoginRequiredModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        title="로그인이 필요해요"
+        description="옷을 수정하거나 삭제하려면 로그인해주세요"
       />
     </>
   );
@@ -181,6 +190,7 @@ export const ClothesDetailModal = ({
 interface ViewModeProps {
   item: ClothingItem;
   showDeleteConfirm: boolean;
+  isDeleting: boolean;
   onEdit: () => void;
   onDeleteClick: () => void;
   onDeleteConfirm: () => void;
@@ -190,6 +200,7 @@ interface ViewModeProps {
 const ViewMode = ({
   item,
   showDeleteConfirm,
+  isDeleting,
   onEdit,
   onDeleteClick,
   onDeleteConfirm,
@@ -200,11 +211,13 @@ const ViewMode = ({
   const hasImages = item.imageUrls.length > 0;
   const hasMultipleImages = item.imageUrls.length > 1;
 
-  // 아이템이 바뀌면 상태 리셋
+  // 아이템이 바뀌면 상태 리셋 (props 변경 시 내부 상태 동기화)
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setSelectedImageIndex(0);
     setIsFullscreen(false);
   }, [item.id]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleCloseFullscreen = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -378,6 +391,7 @@ const ViewMode = ({
               variant="secondary"
               onClick={onDeleteCancel}
               className="flex-1"
+              disabled={isDeleting}
             >
               취소
             </Button>
@@ -386,8 +400,9 @@ const ViewMode = ({
               variant="danger"
               onClick={onDeleteConfirm}
               className="flex-1"
+              disabled={isDeleting}
             >
-              삭제
+              {isDeleting ? "삭제 중..." : "삭제"}
             </Button>
           </div>
         </div>
@@ -424,7 +439,9 @@ interface EditModeProps {
     category?: string;
     seasons?: string;
     purchaseLink?: string;
+    submit?: string;
   };
+  isSubmitting: boolean;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
   setImageUrls: (urls: string[]) => void;
@@ -442,6 +459,7 @@ const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const EditMode = ({
   formData,
   errors,
+  isSubmitting,
   onSubmit,
   onCancel,
   setImageUrls,
@@ -704,17 +722,22 @@ const EditMode = ({
         error={errors.purchaseLink}
       />
 
+      {errors.submit && (
+        <p className="text-sm text-danger">{errors.submit}</p>
+      )}
+
       <div className="flex gap-3 pt-2">
         <Button
           type="button"
           variant="secondary"
           onClick={onCancel}
           className="flex-1"
+          disabled={isSubmitting}
         >
           취소
         </Button>
-        <Button type="submit" className="flex-1">
-          저장
+        <Button type="submit" className="flex-1" disabled={isSubmitting}>
+          {isSubmitting ? "저장 중..." : "저장"}
         </Button>
       </div>
     </form>

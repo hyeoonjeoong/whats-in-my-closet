@@ -9,7 +9,7 @@ import {
   OutfitSaveSection,
 } from "@/components/outfit";
 import { HierarchicalFilterBar } from "@/components/closet";
-import { useToast } from "@/components/ui";
+import { useToast, DemoStickyBar } from "@/components/ui";
 import { useClothes } from "@/hooks/useClothes";
 import { useFilter } from "@/hooks/useFilter";
 import { useOutfitBuilder } from "@/hooks/useOutfitBuilder";
@@ -65,14 +65,13 @@ export default function EditOutfitPage({ params }: EditOutfitPageProps) {
     }
   }, [outfit, isInitialized, loadFromOutfit]);
 
-  const handleSave = async (data: { name: string; seasons: Season[]; styles: Style[]; moods: Mood[]; password: string }) => {
+  const handleSave = async (data: { name: string; seasons: Season[]; styles: Style[]; moods: Mood[] }) => {
     if (!hasSelection) return;
 
     setIsSaving(true);
     try {
       const formData = new FormData();
       formData.append("id", id);
-      formData.append("password", data.password);
       formData.append(
         "data",
         JSON.stringify({
@@ -127,6 +126,7 @@ export default function EditOutfitPage({ params }: EditOutfitPageProps) {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <OutfitHeader title="코디 수정" />
+      <DemoStickyBar />
 
       <main className="flex-1 p-4 space-y-6">
         {/* 상단 섹션: 옷 선택 */}

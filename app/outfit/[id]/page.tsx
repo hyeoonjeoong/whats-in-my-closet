@@ -8,7 +8,8 @@ import {
   OutfitCollage,
 } from "@/components/outfit";
 import { ClothesDetailModal } from "@/components/closet";
-import { Button, PasswordModal, useToast } from "@/components/ui";
+import { Button, useToast, LoginRequiredModal } from "@/components/ui";
+import { useAuth } from "@/lib/auth/AuthContext";
 import { SEASONS, STYLES, MOODS, SUB_TO_MAIN_CATEGORY } from "@/lib/constants";
 import type { MainCategory } from "@/types";
 import { useOutfitDetail } from "@/hooks/useOutfits";
@@ -24,13 +25,17 @@ export default function OutfitDetailPage({ params }: OutfitDetailPageProps) {
   const { id } = use(params);
   const router = useRouter();
 
+  const { user } = useAuth();
   const { outfit, isLoading, error } = useOutfitDetail(id);
   const { showToast } = useToast();
 
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // 데모 데이터 여부 (user_id가 null이면 데모)
+  const isDemoData = outfit?.userId === null;
 
   const selection = useMemo((): OutfitSelection => {
     if (!outfit) {
@@ -79,20 +84,37 @@ export default function OutfitDetailPage({ params }: OutfitDetailPageProps) {
     setSelectedItemId(null);
   };
 
+  // 수정 버튼 클릭 시 권한 체크
+  const handleEditClick = () => {
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+    if (isDemoData) {
+      showToast("데모 데이터는 수정할 수 없어요", "error");
+      return;
+    }
+    router.push(`/outfit/${id}/edit`);
+  };
+
+  // 삭제 버튼 클릭 시 권한 체크
   const handleDeleteClick = () => {
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+    if (isDemoData) {
+      showToast("데모 데이터는 삭제할 수 없어요", "error");
+      return;
+    }
     setShowDeleteConfirm(true);
   };
 
-  const handleDeleteConfirmClick = () => {
-    setShowPasswordModal(true);
-  };
-
-  const handlePasswordConfirm = async (password: string) => {
+  const handleDeleteConfirm = async () => {
     setIsDeleting(true);
     try {
       const formData = new FormData();
       formData.append("id", id);
-      formData.append("password", password);
 
       const result = await deleteOutfitAction(formData);
 
@@ -106,7 +128,6 @@ export default function OutfitDetailPage({ params }: OutfitDetailPageProps) {
       showToast("코디 삭제 중 오류가 발생했습니다", "error");
     } finally {
       setIsDeleting(false);
-      setShowPasswordModal(false);
     }
   };
 
@@ -239,15 +260,17 @@ export default function OutfitDetailPage({ params }: OutfitDetailPageProps) {
                 variant="secondary"
                 onClick={() => setShowDeleteConfirm(false)}
                 className="flex-1"
+                disabled={isDeleting}
               >
                 취소
               </Button>
               <Button
                 variant="danger"
-                onClick={handleDeleteConfirmClick}
+                onClick={handleDeleteConfirm}
                 className="flex-1"
+                disabled={isDeleting}
               >
-                삭제
+                {isDeleting ? "삭제 중..." : "삭제"}
               </Button>
             </div>
           </div>
@@ -255,7 +278,7 @@ export default function OutfitDetailPage({ params }: OutfitDetailPageProps) {
           <div className="flex gap-3">
             <Button
               variant="primary"
-              onClick={() => router.push(`/outfit/${id}/edit`)}
+              onClick={handleEditClick}
               className="flex-1"
             >
               <Pencil size={18} className="mr-2" />
@@ -282,14 +305,12 @@ export default function OutfitDetailPage({ params }: OutfitDetailPageProps) {
         onDelete={() => {}}
       />
 
-      {/* 비밀번호 모달 */}
-      <PasswordModal
-        isOpen={showPasswordModal}
-        onClose={() => setShowPasswordModal(false)}
-        onConfirm={handlePasswordConfirm}
-        title="코디 삭제"
-        description="삭제하려면 관리자 비밀번호를 입력해주세요"
-        isLoading={isDeleting}
+      {/* 로그인 유도 모달 */}
+      <LoginRequiredModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        title="로그인이 필요해요"
+        description="코디를 수정하거나 삭제하려면 로그인해주세요"
       />
     </div>
   );

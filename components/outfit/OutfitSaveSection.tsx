@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Input, Button, PasswordModal, HierarchicalSeasonSelect } from "@/components/ui";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { Input, Button, HierarchicalSeasonSelect, LoginRequiredModal } from "@/components/ui";
 import { STYLES, MOODS } from "@/lib/constants";
 import type { Season, Style, Mood } from "@/types";
 
@@ -11,7 +12,7 @@ interface OutfitSaveSectionProps {
   defaultSeasons?: Season[];
   defaultStyles?: Style[];
   defaultMoods?: Mood[];
-  onSave: (data: { name: string; seasons: Season[]; styles: Style[]; moods: Mood[]; password: string }) => void;
+  onSave: (data: { name: string; seasons: Season[]; styles: Style[]; moods: Mood[] }) => void;
   isLoading?: boolean;
   hasSelection: boolean;
   submitLabel?: string;
@@ -28,11 +29,12 @@ export const OutfitSaveSection = ({
   hasSelection,
   submitLabel = "저장하기",
 }: OutfitSaveSectionProps) => {
+  const { user } = useAuth();
   const [name, setName] = useState(defaultName);
   const [seasons, setSeasons] = useState<Season[]>(defaultSeasons);
   const [styles, setStyles] = useState<Style[]>(defaultStyles);
   const [moods, setMoods] = useState<Mood[]>(defaultMoods);
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const handleStyleToggle = (style: Style) => {
     if (styles.includes(style)) {
@@ -52,13 +54,15 @@ export const OutfitSaveSection = ({
 
   const handleSubmit = () => {
     if (!hasSelection) return;
-    setIsPasswordModalOpen(true);
-  };
 
-  const handlePasswordConfirm = async (password: string) => {
+    // 비로그인 시 로그인 유도 모달
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+
     const finalName = name.trim() || placeholderName || "코디";
-    onSave({ name: finalName, seasons, styles, moods, password });
-    setIsPasswordModalOpen(false);
+    onSave({ name: finalName, seasons, styles, moods });
   };
 
   return (
@@ -128,11 +132,11 @@ export const OutfitSaveSection = ({
         {submitLabel}
       </Button>
 
-      <PasswordModal
-        isOpen={isPasswordModalOpen}
-        onClose={() => setIsPasswordModalOpen(false)}
-        onConfirm={handlePasswordConfirm}
-        title={submitLabel}
+      <LoginRequiredModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        title="로그인이 필요해요"
+        description="코디를 저장하려면 로그인해주세요"
       />
     </div>
   );

@@ -19,7 +19,7 @@ interface FormErrors {
   category?: string;
   seasons?: string;
   purchaseLink?: string;
-  password?: string;
+  submit?: string;
 }
 
 interface UseAddClothesReturn {
@@ -32,9 +32,8 @@ interface UseAddClothesReturn {
   setSeasons: (seasons: Season[]) => void;
   setPurchaseLink: (link: string) => void;
   validate: () => boolean;
-  submit: (password: string) => Promise<ClothingItem>;
+  submit: () => Promise<ClothingItem>;
   reset: () => void;
-  clearPasswordError: () => void;
 }
 
 const initialFormData: FormData = {
@@ -104,7 +103,7 @@ export const useAddClothes = (): UseAddClothesReturn => {
     return Object.keys(newErrors).length === 0;
   }, [formData]);
 
-  const submit = useCallback(async (password: string): Promise<ClothingItem> => {
+  const submit = useCallback(async (): Promise<ClothingItem> => {
     if (!validate()) {
       throw new Error("입력값을 확인해주세요");
     }
@@ -114,7 +113,7 @@ export const useAddClothes = (): UseAddClothesReturn => {
     }
 
     setIsSubmitting(true);
-    setErrors((prev) => ({ ...prev, password: undefined }));
+    setErrors((prev) => ({ ...prev, submit: undefined }));
 
     try {
       // 이름이 비어있으면 첫 번째 카테고리명 사용
@@ -133,12 +132,11 @@ export const useAddClothes = (): UseAddClothesReturn => {
           purchaseLink: formData.purchaseLink.trim() || undefined,
         })
       );
-      submitFormData.append("password", password);
 
       const result = await createClothesAction(submitFormData);
 
       if (!result.success) {
-        setErrors((prev) => ({ ...prev, password: result.error }));
+        setErrors((prev) => ({ ...prev, submit: result.error }));
         throw new Error(result.error);
       }
 
@@ -153,10 +151,6 @@ export const useAddClothes = (): UseAddClothesReturn => {
     setErrors({});
   }, []);
 
-  const clearPasswordError = useCallback(() => {
-    setErrors((prev) => ({ ...prev, password: undefined }));
-  }, []);
-
   return {
     formData,
     errors,
@@ -169,6 +163,5 @@ export const useAddClothes = (): UseAddClothesReturn => {
     validate,
     submit,
     reset,
-    clearPasswordError,
   };
 };
