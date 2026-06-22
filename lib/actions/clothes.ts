@@ -8,6 +8,67 @@ import { toClothingItem } from "@/types";
 const TABLE_NAME = "clothes";
 const BUCKET_NAME = "clothes-images";
 
+interface ActionResult<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}
+
+// =============================================
+// 조회 액션 (인증 불필요 - RLS가 처리)
+// =============================================
+
+export const fetchClothesAction = async (): Promise<ActionResult<ClothingItem[]>> => {
+  try {
+    const supabase = await createServerSupabaseClient();
+
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      return { success: false, error: `옷 목록 조회 실패: ${error.message}` };
+    }
+
+    return { success: true, data: (data as DbClothes[]).map(toClothingItem) };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "알 수 없는 오류",
+    };
+  }
+};
+
+export const fetchClothesDetailAction = async (
+  id: string
+): Promise<ActionResult<ClothingItem>> => {
+  try {
+    const supabase = await createServerSupabaseClient();
+
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      return { success: false, error: `옷 조회 실패: ${error.message}` };
+    }
+
+    return { success: true, data: toClothingItem(data as DbClothes) };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "알 수 없는 오류",
+    };
+  }
+};
+
+// =============================================
+// 변경 액션 (인증 필요)
+// =============================================
+
 // Next.js 서버 액션에서 FormData 키의 prefix를 제거하는 헬퍼
 const getFormValue = (formData: FormData, key: string): FormDataEntryValue | null => {
   // 직접 키로 먼저 시도
@@ -37,12 +98,6 @@ const getFormValues = (formData: FormData, key: string): FormDataEntryValue[] =>
   }
   return values;
 };
-
-interface ActionResult<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-}
 
 interface CreateClothesData {
   name: string;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { getClothes, deleteClothes } from "@/lib/api/clothes";
+import { fetchClothesAction } from "@/lib/actions/clothes";
 import type { ClothingItem } from "@/types";
 
 interface UseClothesReturn {
@@ -9,7 +9,7 @@ interface UseClothesReturn {
   isLoading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
-  removeClothes: (id: string) => Promise<void>;
+  removeItem: (id: string) => void;
 }
 
 export const useClothes = (): UseClothesReturn => {
@@ -22,8 +22,12 @@ export const useClothes = (): UseClothesReturn => {
     setError(null);
 
     try {
-      const data = await getClothes();
-      setClothes(data);
+      const result = await fetchClothesAction();
+      if (result.success && result.data) {
+        setClothes(result.data);
+      } else {
+        setError(result.error || "옷 목록을 불러오는데 실패했습니다");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "옷 목록을 불러오는데 실패했습니다");
     } finally {
@@ -31,13 +35,8 @@ export const useClothes = (): UseClothesReturn => {
     }
   }, []);
 
-  const removeClothes = useCallback(async (id: string) => {
-    try {
-      await deleteClothes(id);
-      setClothes((prev) => prev.filter((item) => item.id !== id));
-    } catch (err) {
-      throw err instanceof Error ? err : new Error("옷 삭제에 실패했습니다");
-    }
+  const removeItem = useCallback((id: string) => {
+    setClothes((prev) => prev.filter((item) => item.id !== id));
   }, []);
 
   useEffect(() => {
@@ -49,6 +48,6 @@ export const useClothes = (): UseClothesReturn => {
     isLoading,
     error,
     refetch: fetchClothes,
-    removeClothes,
+    removeItem,
   };
 };

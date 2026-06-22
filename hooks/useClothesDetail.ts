@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { getClothesById } from "@/lib/api/clothes";
 import {
+  fetchClothesDetailAction,
   updateClothesAction,
   deleteClothesAction,
 } from "@/lib/actions/clothes";
@@ -74,16 +74,21 @@ export const useClothesDetail = (): UseClothesDetailReturn => {
     setErrors({});
 
     try {
-      const loadedItem = await getClothesById(id);
-      setItem(loadedItem);
-      setFormData({
-        imageUrls: loadedItem.imageUrls,
-        newImages: [],
-        name: loadedItem.name,
-        categories: loadedItem.categories,
-        seasons: loadedItem.seasons,
-        purchaseLink: loadedItem.purchaseLink ?? "",
-      });
+      const result = await fetchClothesDetailAction(id);
+      if (result.success && result.data) {
+        const loadedItem = result.data;
+        setItem(loadedItem);
+        setFormData({
+          imageUrls: loadedItem.imageUrls,
+          newImages: [],
+          name: loadedItem.name,
+          categories: loadedItem.categories,
+          seasons: loadedItem.seasons,
+          purchaseLink: loadedItem.purchaseLink ?? "",
+        });
+      } else {
+        throw new Error(result.error || "옷 정보를 불러오는데 실패했습니다");
+      }
     } finally {
       setIsLoading(false);
     }
