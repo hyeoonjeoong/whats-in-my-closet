@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { getOutfits, getOutfitById } from "@/lib/api/outfits";
+import { fetchOutfitsAction, fetchOutfitDetailAction } from "@/lib/actions/outfits";
 import type { Outfit } from "@/types";
 
 interface UseOutfitsReturn {
@@ -26,8 +26,12 @@ export const useOutfits = (): UseOutfitsReturn => {
     setError(null);
 
     try {
-      const data = await getOutfits();
-      setOutfits(data);
+      const result = await fetchOutfitsAction();
+      if (result.success && result.data) {
+        setOutfits(result.data);
+      } else {
+        setError(result.error || "코디 목록을 불러오는데 실패했습니다");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "코디 목록을 불러오는데 실패했습니다");
     } finally {
@@ -86,8 +90,12 @@ export const useOutfitDetail = (id: string | null): UseOutfitDetailReturn => {
     setError(null);
 
     try {
-      const data = await getOutfitById(id);
-      setOutfit(data);
+      const result = await fetchOutfitDetailAction(id);
+      if (result.success && result.data) {
+        setOutfit(result.data);
+      } else {
+        setError(result.error || "코디를 불러오는데 실패했습니다");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "코디를 불러오는데 실패했습니다");
     } finally {
