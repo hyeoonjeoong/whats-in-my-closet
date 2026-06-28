@@ -55,7 +55,6 @@ export const HierarchicalFilterBar = ({
             <Button
               variant="chip"
               size="sm"
-              dashed
               selected={isAllSeasonsSelected}
               onClick={onAllSeasonsToggle}
             >

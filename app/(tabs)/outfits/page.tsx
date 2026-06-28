@@ -126,7 +126,6 @@ export default function OutfitsPage() {
                 <Button
                   variant="chip"
                   size="sm"
-                  dashed
                   selected={isAllSeasonsSelected}
                   onClick={toggleAllSeasons}
                 >
