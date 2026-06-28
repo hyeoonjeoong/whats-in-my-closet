@@ -23,6 +23,14 @@ export default function LookbookPage() {
     );
   };
 
+  const toggleAllSeasons = () => {
+    const allSeasonValues = SEASONS.map((s) => s.value);
+    const isAllSelected = allSeasonValues.every((v) => selectedSeasons.includes(v));
+    setSelectedSeasons(isAllSelected ? [] : allSeasonValues);
+  };
+
+  const isAllSeasonsSelected = SEASONS.every((s) => selectedSeasons.includes(s.value));
+
   const toggleStyle = (style: Style) => {
     setSelectedStyles((prev) =>
       prev.includes(style)
@@ -57,6 +65,16 @@ export default function LookbookPage() {
             <span className="w-10 text-xs font-medium text-secondary-1 shrink-0">계절</span>
             <div className="overflow-x-auto scrollbar-hide flex-1">
               <div className="flex items-center gap-2 min-w-max">
+                {/* 계절무관 바로가기 */}
+                <Button
+                  variant="chip"
+                  size="sm"
+                  selected={isAllSeasonsSelected}
+                  onClick={toggleAllSeasons}
+                >
+                  계절무관
+                </Button>
+                <div className="h-4 w-px bg-secondary-1/30" />
                 {SEASONS.map(({ value, label }) => (
                   <Button
                     key={value}
