@@ -15,6 +15,7 @@ import {
   LoginRequiredModal,
   useToast,
 } from "@/components/ui";
+import { RelatedOutfitsList } from "./RelatedOutfitsList";
 import { cn } from "@/lib/utils";
 import type { ClothingItem, SubCategory, Season } from "@/types";
 
@@ -173,6 +174,7 @@ export const ClothesDetailModal = ({
             onDeleteClick={handleDeleteClick}
             onDeleteConfirm={handleDelete}
             onDeleteCancel={() => setShowDeleteConfirm(false)}
+            onClose={handleClose}
           />
         )}
       </Modal>
@@ -195,6 +197,7 @@ interface ViewModeProps {
   onDeleteClick: () => void;
   onDeleteConfirm: () => void;
   onDeleteCancel: () => void;
+  onClose: () => void;
 }
 
 const ViewMode = ({
@@ -205,6 +208,7 @@ const ViewMode = ({
   onDeleteClick,
   onDeleteConfirm,
   onDeleteCancel,
+  onClose,
 }: ViewModeProps) => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -378,6 +382,9 @@ const ViewMode = ({
           </div>
         )}
       </div>
+
+      {/* 관련 코디 */}
+      <RelatedOutfitsList clothingId={item.id} onClose={onClose} />
 
       {/* 버튼 영역 */}
       {showDeleteConfirm ? (

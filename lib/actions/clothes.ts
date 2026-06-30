@@ -1,7 +1,7 @@
 "use server";
 
 import { createServerSupabaseClient } from "@/lib/supabase-server";
-import { requireAuth } from "@/lib/auth/serverAuth";
+import { requireAuth, getServerUser } from "@/lib/auth/serverAuth";
 import type { DbClothes, ClothingItem, SubCategory, Season } from "@/types";
 import { toClothingItem } from "@/types";
 
@@ -15,17 +15,28 @@ interface ActionResult<T> {
 }
 
 // =============================================
-// 조회 액션 (인증 불필요 - RLS가 처리)
+// 조회 액션 (유저별 데이터 분리)
 // =============================================
 
 export const fetchClothesAction = async (): Promise<ActionResult<ClothingItem[]>> => {
   try {
     const supabase = await createServerSupabaseClient();
+    const { user } = await getServerUser();
 
-    const { data, error } = await supabase
+    let query = supabase
       .from(TABLE_NAME)
       .select("*")
       .order("created_at", { ascending: false });
+
+    if (user) {
+      // 로그인 유저: 자신의 데이터만
+      query = query.eq("user_id", user.id);
+    } else {
+      // 비로그인: 데모 데이터만 (user_id가 null)
+      query = query.is("user_id", null);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       return { success: false, error: `옷 목록 조회 실패: ${error.message}` };
@@ -45,6 +56,7 @@ export const fetchClothesDetailAction = async (
 ): Promise<ActionResult<ClothingItem>> => {
   try {
     const supabase = await createServerSupabaseClient();
+    const { user } = await getServerUser();
 
     const { data, error } = await supabase
       .from(TABLE_NAME)
@@ -56,7 +68,14 @@ export const fetchClothesDetailAction = async (
       return { success: false, error: `옷 조회 실패: ${error.message}` };
     }
 
-    return { success: true, data: toClothingItem(data as DbClothes) };
+    const dbData = data as DbClothes;
+
+    // 권한 확인: 자신의 데이터이거나 데모 데이터만 조회 가능
+    if (dbData.user_id !== null && dbData.user_id !== user?.id) {
+      return { success: false, error: "접근 권한이 없습니다" };
+    }
+
+    return { success: true, data: toClothingItem(dbData) };
   } catch (error) {
     return {
       success: false,
@@ -200,7 +219,7 @@ export const updateClothesAction = async (
 ): Promise<ActionResult<ClothingItem>> => {
   try {
     // 인증 확인
-    await requireAuth();
+    const user = await requireAuth();
     const supabase = await createServerSupabaseClient();
 
     const id = getFormValue(formData, "id") as string;
@@ -208,12 +227,17 @@ export const updateClothesAction = async (
     const dataJson = getFormValue(formData, "data") as string;
     const data: UpdateClothesData = JSON.parse(dataJson);
 
-    // 기존 이미지 URL 목록 가져오기
+    // 기존 데이터 가져오기 + 권한 확인
     const { data: existing } = await supabase
       .from(TABLE_NAME)
-      .select("image_urls")
+      .select("image_urls, user_id")
       .eq("id", id)
       .single();
+
+    // 권한 확인: 자신의 데이터만 수정 가능
+    if (!existing || existing.user_id !== user.id) {
+      return { success: false, error: "수정 권한이 없습니다" };
+    }
 
     const oldImageUrls: string[] = existing?.image_urls || [];
     const existingImageUrls: string[] = data.existingImageUrls || [];
@@ -326,20 +350,25 @@ export const deleteClothesAction = async (
 ): Promise<ActionResult<void>> => {
   try {
     // 인증 확인
-    await requireAuth();
+    const user = await requireAuth();
     const supabase = await createServerSupabaseClient();
 
     const id = getFormValue(formData, "id") as string;
 
-    // 기존 이미지 경로들 가져오기
+    // 기존 데이터 가져오기 + 권한 확인
     const { data: existing } = await supabase
       .from(TABLE_NAME)
-      .select("image_urls")
+      .select("image_urls, user_id")
       .eq("id", id)
       .single();
 
+    // 권한 확인: 자신의 데이터만 삭제 가능
+    if (!existing || existing.user_id !== user.id) {
+      return { success: false, error: "삭제 권한이 없습니다" };
+    }
+
     const imagePaths: string[] = [];
-    if (existing?.image_urls) {
+    if (existing.image_urls) {
       for (const url of existing.image_urls) {
         const match = url.match(new RegExp(`${BUCKET_NAME}/(.+)$`));
         if (match) {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { fetchOutfitsAction, fetchOutfitDetailAction } from "@/lib/actions/outfits";
+import { useAuth } from "@/lib/auth/AuthContext";
 import type { Outfit } from "@/types";
 
 interface UseOutfitsReturn {
@@ -17,6 +18,7 @@ const OUTFIT_NAME_PATTERN = /^코디\s*(\d{1,4})$/;
 const MAX_OUTFIT_INDEX = 9999;
 
 export const useOutfits = (): UseOutfitsReturn => {
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [outfits, setOutfits] = useState<Outfit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,9 +57,12 @@ export const useOutfits = (): UseOutfitsReturn => {
     return `코디 ${maxIndex + 1}`;
   }, [outfits]);
 
+  // 인증 상태가 변경되면 데이터 다시 fetch
   useEffect(() => {
-    fetchOutfits();
-  }, [fetchOutfits]);
+    if (!isAuthLoading) {
+      fetchOutfits();
+    }
+  }, [fetchOutfits, user?.id, isAuthLoading]);
 
   return {
     outfits,

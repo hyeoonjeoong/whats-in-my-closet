@@ -3,3 +3,4 @@ export { ClothesCard } from "./ClothesCard";
 export { ClothesList } from "./ClothesList";
 export { AddClothesModal } from "./AddClothesModal";
 export { ClothesDetailModal } from "./ClothesDetailModal";
+export { RelatedOutfitsList } from "./RelatedOutfitsList";
