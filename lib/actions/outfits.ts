@@ -1,7 +1,7 @@
 "use server";
 
 import { createServerSupabaseClient } from "@/lib/supabase-server";
-import { requireAuth } from "@/lib/auth/serverAuth";
+import { requireAuth, getServerUser } from "@/lib/auth/serverAuth";
 import type { DbOutfit, DbClothes, Outfit, Season, Style, Mood, ClothingItem } from "@/types";
 import { toClothingItem, toOutfit } from "@/types";
 
@@ -28,18 +28,29 @@ interface ActionResult<T> {
 }
 
 // =============================================
-// 조회 액션 (인증 불필요 - RLS가 처리)
+// 조회 액션 (유저별 데이터 분리)
 // =============================================
 
 export const fetchOutfitsAction = async (): Promise<ActionResult<Outfit[]>> => {
   try {
     const supabase = await createServerSupabaseClient();
+    const { user } = await getServerUser();
 
-    // 모든 코디 조회
-    const { data: outfitsData, error: outfitsError } = await supabase
+    // 유저별 코디 조회
+    let query = supabase
       .from(OUTFIT_TABLE)
       .select("*")
       .order("created_at", { ascending: false });
+
+    if (user) {
+      // 로그인 유저: 자신의 데이터만
+      query = query.eq("user_id", user.id);
+    } else {
+      // 비로그인: 데모 데이터만 (user_id가 null)
+      query = query.is("user_id", null);
+    }
+
+    const { data: outfitsData, error: outfitsError } = await query;
 
     if (outfitsError) {
       return { success: false, error: `코디 목록 조회 실패: ${outfitsError.message}` };
@@ -107,11 +118,116 @@ export const fetchOutfitsAction = async (): Promise<ActionResult<Outfit[]>> => {
   }
 };
 
+export const fetchOutfitsByClothingIdAction = async (
+  clothingId: string
+): Promise<ActionResult<Outfit[]>> => {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { user } = await getServerUser();
+
+    // 해당 옷이 포함된 outfit_id 조회
+    const { data: outfitItemsData, error: itemsError } = await supabase
+      .from(OUTFIT_ITEMS_TABLE)
+      .select("outfit_id")
+      .eq("clothing_id", clothingId);
+
+    if (itemsError) {
+      return { success: false, error: `코디 아이템 조회 실패: ${itemsError.message}` };
+    }
+
+    if (!outfitItemsData || outfitItemsData.length === 0) {
+      return { success: true, data: [] };
+    }
+
+    const outfitIds = [...new Set(outfitItemsData.map((item) => item.outfit_id))];
+
+    // 유저별 코디 조회
+    let query = supabase
+      .from(OUTFIT_TABLE)
+      .select("*")
+      .in("id", outfitIds)
+      .order("created_at", { ascending: false });
+
+    if (user) {
+      query = query.eq("user_id", user.id);
+    } else {
+      query = query.is("user_id", null);
+    }
+
+    const { data: outfitsData, error: outfitsError } = await query;
+
+    if (outfitsError) {
+      return { success: false, error: `코디 목록 조회 실패: ${outfitsError.message}` };
+    }
+
+    const outfits = outfitsData as DbOutfit[];
+
+    if (outfits.length === 0) {
+      return { success: true, data: [] };
+    }
+
+    // 모든 코디의 아이템 연결 정보 조회
+    const filteredOutfitIds = outfits.map((o) => o.id);
+    const { data: allOutfitItemsData, error: allItemsError } = await supabase
+      .from(OUTFIT_ITEMS_TABLE)
+      .select("*")
+      .in("outfit_id", filteredOutfitIds);
+
+    if (allItemsError) {
+      return { success: false, error: `코디 아이템 조회 실패: ${allItemsError.message}` };
+    }
+
+    const outfitItems = allOutfitItemsData as { outfit_id: string; clothing_id: string }[];
+
+    // 필요한 옷 아이템 조회
+    const clothingIds = [...new Set(outfitItems.map((item) => item.clothing_id))];
+
+    if (clothingIds.length === 0) {
+      return { success: true, data: outfits.map((outfit) => toOutfit(outfit, [])) };
+    }
+
+    const { data: clothesData, error: clothesError } = await supabase
+      .from(CLOTHES_TABLE)
+      .select("*")
+      .in("id", clothingIds);
+
+    if (clothesError) {
+      return { success: false, error: `옷 아이템 조회 실패: ${clothesError.message}` };
+    }
+
+    const clothesMap = new Map<string, ClothingItem>(
+      (clothesData as DbClothes[]).map((c) => [c.id, toClothingItem(c)])
+    );
+
+    // 코디별로 아이템 그룹핑
+    const outfitItemsMap = new Map<string, ClothingItem[]>();
+    for (const item of outfitItems) {
+      const clothing = clothesMap.get(item.clothing_id);
+      if (clothing) {
+        const items = outfitItemsMap.get(item.outfit_id) || [];
+        items.push(clothing);
+        outfitItemsMap.set(item.outfit_id, items);
+      }
+    }
+
+    return {
+      success: true,
+      data: outfits.map((outfit) => toOutfit(outfit, outfitItemsMap.get(outfit.id) || [])),
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "알 수 없는 오류",
+    };
+  }
+};
+
 export const fetchOutfitDetailAction = async (
   id: string
 ): Promise<ActionResult<Outfit>> => {
   try {
     const supabase = await createServerSupabaseClient();
+    const { user } = await getServerUser();
 
     // 코디 정보 조회
     const { data: outfitData, error: outfitError } = await supabase
@@ -125,6 +241,11 @@ export const fetchOutfitDetailAction = async (
     }
 
     const outfit = outfitData as DbOutfit;
+
+    // 권한 확인: 자신의 데이터이거나 데모 데이터만 조회 가능
+    if (outfit.user_id !== null && outfit.user_id !== user?.id) {
+      return { success: false, error: "접근 권한이 없습니다" };
+    }
 
     // 코디의 아이템 연결 정보 조회
     const { data: outfitItemsData, error: itemsError } = await supabase
@@ -260,12 +381,23 @@ export const updateOutfitAction = async (
 ): Promise<ActionResult<Outfit>> => {
   try {
     // 인증 확인
-    await requireAuth();
+    const user = await requireAuth();
     const supabase = await createServerSupabaseClient();
 
     const id = getFormValue(formData, "id") as string;
     const dataJson = getFormValue(formData, "data") as string;
     const data: UpdateOutfitData = JSON.parse(dataJson);
+
+    // 기존 데이터 권한 확인
+    const { data: existing } = await supabase
+      .from(OUTFIT_TABLE)
+      .select("user_id")
+      .eq("id", id)
+      .single();
+
+    if (!existing || existing.user_id !== user.id) {
+      return { success: false, error: "수정 권한이 없습니다" };
+    }
 
     // 코디 정보 업데이트
     const updateData: Record<string, unknown> = {};
@@ -359,10 +491,21 @@ export const deleteOutfitAction = async (
 ): Promise<ActionResult<void>> => {
   try {
     // 인증 확인
-    await requireAuth();
+    const user = await requireAuth();
     const supabase = await createServerSupabaseClient();
 
     const id = getFormValue(formData, "id") as string;
+
+    // 기존 데이터 권한 확인
+    const { data: existing } = await supabase
+      .from(OUTFIT_TABLE)
+      .select("user_id")
+      .eq("id", id)
+      .single();
+
+    if (!existing || existing.user_id !== user.id) {
+      return { success: false, error: "삭제 권한이 없습니다" };
+    }
 
     // 코디 삭제 (cascade로 outfit_items도 자동 삭제됨)
     const { error: deleteError } = await supabase

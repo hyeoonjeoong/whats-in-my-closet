@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useAuth } from "@/lib/auth/AuthContext";
 
 export const Header = () => {
@@ -8,9 +9,11 @@ export const Header = () => {
   return (
     <header className="sticky top-0 z-sticky bg-background">
       <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-4">
-        <h1 className="text-2xl text-primary font-[family-name:var(--font-boogaloo)]">
-          what&apos;s in my closet
-        </h1>
+        <Link href="/closet">
+          <h1 className="text-2xl text-primary font-[family-name:var(--font-boogaloo)]">
+            what&apos;s in my closet
+          </h1>
+        </Link>
 
         {/* 테스트용 로그인 버튼 (나중에 정리) */}
         <div className="flex items-center gap-2">
